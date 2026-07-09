@@ -3,10 +3,10 @@
 export const autoTimelineData = [
   {
     "id": 1,
-    "period": "năm 2026",
+    "period": "năm 2026a",
     "source": "SGK Lịch sử 10 – Biên soạn chuẩn",
     "category": "vietnam",
-    "title": "1000 năm thăng long ha hội",
+    "title": "1000 năm thăádang long ha hộisd",
     "basic": "",
     "advanced": "abc",
     "full_wiki": "abc",
