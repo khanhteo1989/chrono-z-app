@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-chrono-dark text-white font-body;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+  }
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-chrono-dark;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-chrono-purple rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-chrono-mint;
+}
