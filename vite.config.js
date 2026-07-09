@@ -61,6 +61,32 @@ const localApiPlugin = () => {
           return;
         }
 
+        // API Save About Info
+        if (req.url === '/api/save-about' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => {
+            body += chunk.toString();
+          });
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body);
+              const fileContent = `// CHRONO-Z ABOUT DATA\n\nexport const aboutData = ${JSON.stringify(data, null, 2)};\n`;
+              
+              const filePath = path.resolve(__dirname, 'src/aboutData.js');
+              fs.writeFileSync(filePath, fileContent, 'utf-8');
+              
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, message: 'About info saved successfully!' }));
+            } catch (err) {
+              console.error(err);
+              res.statusCode = 500;
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
+
         // API Upload Image
         if (req.url === '/api/upload' && req.method === 'POST') {
           let body = '';

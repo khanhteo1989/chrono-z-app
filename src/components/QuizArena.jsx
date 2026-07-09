@@ -79,7 +79,7 @@ const QuizArena = () => {
         <div>
           <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2 flex items-center gap-3 flex-wrap drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]">
             <BrainCircuit size={36} className="text-yellow-400" />
-            Quiz Arena (Đấu trường Trắc nghiệm)
+            Quiz Arena
             {examCode > 0 && (
               <span className="text-sm bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full border border-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.3)]">
                 Mã đề: #{examCode}

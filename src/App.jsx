@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Clock, Users, BrainCircuit, Info } from 'lucide-react'
+import { Home as HomeIcon, Clock, Users, BrainCircuit, Info } from 'lucide-react'
+import Home from './components/Home'
 import TimelineMaster from './components/TimelineMaster'
 import CharacterHub from './components/CharacterHub'
 import QuizArena from './components/QuizArena'
 import About from './components/About'
 
 function App() {
-  const [activeTab, setActiveTab] = useState('quiz')
+  const [activeTab, setActiveTab] = useState('home')
 
   return (
     <div className="flex h-screen bg-chrono-dark text-white font-body overflow-hidden relative">
@@ -25,6 +26,14 @@ function App() {
         </div>
         
         <nav className="flex-1 px-4 space-y-3 mt-8">
+          <button 
+            onClick={() => setActiveTab('home')}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${activeTab === 'home' ? 'bg-white/10 text-white border border-white/50 shadow-[0_0_15px_rgba(255,255,255,0.2)] scale-[1.02]' : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10'}`}
+          >
+            <HomeIcon size={20} className={activeTab === 'home' ? 'animate-pulse' : ''} />
+            <span className="font-heading font-semibold tracking-wide">Trang Chủ</span>
+          </button>
+
           <button 
             onClick={() => setActiveTab('timeline')}
             className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${activeTab === 'timeline' ? 'bg-chrono-mint/10 text-chrono-mint border border-chrono-mint/50 shadow-neon-mint scale-[1.02]' : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10'}`}
@@ -67,6 +76,7 @@ function App() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] pointer-events-none opacity-50"></div>
         
         <div className="relative z-10 h-full">
+          {activeTab === 'home' && <Home setActiveTab={setActiveTab} />}
           {activeTab === 'timeline' && <TimelineMaster />}
           {activeTab === 'characters' && <CharacterHub />}
           {activeTab === 'quiz' && <QuizArena />}

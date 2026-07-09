@@ -20,20 +20,20 @@ export const characterData = [
   },
   {
     "id": 2,
-    "name": "Khúc Hạo",
-    "title": "Người kiến tạo Tự chủ",
-    "motivation": "Khoan thư sức dân, bãi bỏ tô thuế vô lý, xây dựng quốc gia tự chủ.",
-    "quote": "Chính sự cốt chuộng khoan dung, giản dị. Nhân dân đều được yên vui.",
-    "modernLink": "Tư duy Lấy con người làm trung tâm (User-centric).",
+    "name": "Võ Nguyên Giáp",
+    "title": "Thiên tài Quân sự",
+    "motivation": "Giải phóng dân tộc, đánh bại các đế quốc sừng sỏ.",
+    "quote": "Thần tốc, thần tốc hơn nữa. Táo bạo, táo bạo hơn nữa.",
+    "modernLink": "Tư duy Chiến lược, linh hoạt & Quản trị rủi ro.",
     "wikiId": "char_khuc_hao",
     "stats": {
-      "int": 90,
-      "ldr": 94,
-      "vis": 96
+      "int": 100,
+      "ldr": 100,
+      "vis": 101
     },
     "color": "bg-green-500",
     "category": "vietnam",
-    "imageUrl": "/images/1783574742154_grok_image_71e507d9_2e4b_418f_8a3c_ed9809008db7.jpg"
+    "imageUrl": "/images/1783587059272_A_nh_ma_n_hi_nh_2026_07_09_lu_c_15.50.06.png"
   },
   {
     "id": 3,

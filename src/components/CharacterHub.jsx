@@ -281,7 +281,7 @@ const CharacterHub = () => {
     <div className="p-8 h-full flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-chrono-purple to-pink-500 mb-2 drop-shadow-[0_0_15px_rgba(123,44,191,0.5)]">Thẻ Bài Nhân Vật (Agents)</h2>
+          <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-chrono-purple to-pink-500 mb-2 drop-shadow-[0_0_15px_rgba(123,44,191,0.5)]">Thẻ Bài Nhân Vật</h2>
           <p className="text-white/60">Hover vào thẻ bài để đọc Wiki. Bật Edit Mode để chỉnh sửa thẻ bài.</p>
         </div>
 

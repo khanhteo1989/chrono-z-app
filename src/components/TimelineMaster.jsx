@@ -171,7 +171,7 @@ const TimelineMaster = () => {
       <div className="mb-6 flex justify-between items-start">
         <div>
           <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-chrono-mint to-blue-400 mb-1 flex items-center gap-3 drop-shadow-[0_0_15px_rgba(0,245,212,0.5)]">
-            Dòng thời gian (Timeline)
+            Dòng thời gian
             {editMode && <span className="text-sm bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full border border-yellow-500/50">Edit Mode</span>}
           </h2>
           <p className="text-white/50 text-sm">
