@@ -19,23 +19,6 @@ export const characterData = [
     "imageUrl": ""
   },
   {
-    "id": 2,
-    "name": "Võ Nguyên Giáp",
-    "title": "Thiên tài Quân sự",
-    "motivation": "Giải phóng dân tộc, đánh bại các đế quốc sừng sỏ.",
-    "quote": "Thần tốc, thần tốc hơn nữa. Táo bạo, táo bạo hơn nữa.",
-    "modernLink": "Tư duy Chiến lược, linh hoạt & Quản trị rủi ro.",
-    "wikiId": "char_khuc_hao",
-    "stats": {
-      "int": 100,
-      "ldr": 100,
-      "vis": 101
-    },
-    "color": "bg-green-500",
-    "category": "vietnam",
-    "imageUrl": "/images/1783587059272_A_nh_ma_n_hi_nh_2026_07_09_lu_c_15.50.06.png"
-  },
-  {
     "id": 3,
     "name": "Lê Thánh Tông",
     "title": "Minh quân Đại Việt",
@@ -51,6 +34,23 @@ export const characterData = [
     "color": "bg-purple-500",
     "category": "vietnam",
     "imageUrl": "/images/1783579779168_grok_image_840b020f_d1d3_4052_945b_dcdecb652e3b.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Võ Nguyên Giáp",
+    "title": "Thiên tài Quân sự",
+    "motivation": "Giải phóng dân tộc, đánh bại các đế quốc sừng sỏ.",
+    "quote": "Thần tốc, thần tốc hơn nữa. Táo bạo, táo bạo hơn nữa.",
+    "modernLink": "Tư duy Chiến lược, linh hoạt & Quản trị rủi ro.",
+    "wikiId": "char_khuc_hao",
+    "stats": {
+      "int": 100,
+      "ldr": 100,
+      "vis": 101
+    },
+    "color": "bg-green-500",
+    "category": "vietnam",
+    "imageUrl": "/images/1783587059272_A_nh_ma_n_hi_nh_2026_07_09_lu_c_15.50.06.png"
   },
   {
     "id": 4,

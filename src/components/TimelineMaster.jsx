@@ -279,14 +279,52 @@ const TimelineMaster = () => {
           {filteredEvents.map((item) => (
             <button
               key={item.id}
+              draggable={editMode}
+              onDragStart={(e) => {
+                if (!editMode) return;
+                e.dataTransfer.setData('text/plain', item.id);
+                e.target.style.opacity = '0.5';
+              }}
+              onDragEnd={(e) => {
+                e.target.style.opacity = '1';
+              }}
+              onDragOver={(e) => {
+                if (!editMode) return;
+                e.preventDefault();
+                e.currentTarget.style.borderTop = '2px solid #00f5d4';
+              }}
+              onDragLeave={(e) => {
+                if (!editMode) return;
+                e.currentTarget.style.borderTop = '';
+              }}
+              onDrop={(e) => {
+                if (!editMode) return;
+                e.preventDefault();
+                e.currentTarget.style.borderTop = '';
+                const draggedId = Number(e.dataTransfer.getData('text/plain'));
+                if (!draggedId || draggedId === item.id) return;
+                
+                const sourceIdx = events.findIndex(ev => ev.id === draggedId);
+                const targetIdx = events.findIndex(ev => ev.id === item.id);
+                
+                if (sourceIdx >= 0 && targetIdx >= 0) {
+                  const newEvents = [...events];
+                  const [movedItem] = newEvents.splice(sourceIdx, 1);
+                  newEvents.splice(targetIdx, 0, movedItem);
+                  setEvents(newEvents);
+                }
+              }}
               onClick={() => { setActiveEventId(item.id); setIsFullWikiOpen(false); }}
-              className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-300 ${
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-300 ${editMode ? 'cursor-grab active:cursor-grabbing' : ''} ${
                 activeEventId === item.id
                   ? 'backdrop-blur-xl bg-chrono-mint/10 border-chrono-mint shadow-neon-mint scale-[1.02]'
                   : 'backdrop-blur-md bg-white/5 border-white/10 shadow-glass hover:bg-white/10 hover:border-white/30 hover:scale-[1.01]'
               }`}
             >
-              <div className="text-[10px] text-chrono-mint font-bold tracking-widest mb-1 uppercase">{item.period}</div>
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-[10px] text-chrono-mint font-bold tracking-widest uppercase">{item.period}</div>
+                {editMode && <div className="text-white/30 text-[10px]">☰ Kéo thả</div>}
+              </div>
               <div className="font-heading font-semibold text-sm leading-snug line-clamp-2 text-white/90">{item.title}</div>
             </button>
           ))}

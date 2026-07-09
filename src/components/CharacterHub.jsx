@@ -357,13 +357,55 @@ const CharacterHub = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pb-8 custom-scrollbar">
         {filteredEvents.map(char => (
-          <CharacterCard 
-            key={char.id} 
-            char={char} 
-            editMode={editMode} 
-            onUpdate={handleUpdate} 
-            onDelete={handleDelete}
-          />
+          <div
+            key={char.id}
+            draggable={editMode}
+            onDragStart={(e) => {
+              if (!editMode) return;
+              e.dataTransfer.setData('text/plain', char.id);
+              e.target.style.opacity = '0.5';
+            }}
+            onDragEnd={(e) => {
+              e.target.style.opacity = '1';
+            }}
+            onDragOver={(e) => {
+              if (!editMode) return;
+              e.preventDefault();
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.zIndex = '10';
+            }}
+            onDragLeave={(e) => {
+              if (!editMode) return;
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.zIndex = '';
+            }}
+            onDrop={(e) => {
+              if (!editMode) return;
+              e.preventDefault();
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.zIndex = '';
+              const draggedId = Number(e.dataTransfer.getData('text/plain'));
+              if (!draggedId || draggedId === char.id) return;
+              
+              const sourceIdx = events.findIndex(ev => ev.id === draggedId);
+              const targetIdx = events.findIndex(ev => ev.id === char.id);
+              
+              if (sourceIdx >= 0 && targetIdx >= 0) {
+                const newEvents = [...events];
+                const [movedItem] = newEvents.splice(sourceIdx, 1);
+                newEvents.splice(targetIdx, 0, movedItem);
+                setEvents(newEvents);
+              }
+            }}
+            className={editMode ? 'cursor-grab active:cursor-grabbing transition-transform' : ''}
+          >
+            <CharacterCard 
+              char={char} 
+              editMode={editMode} 
+              onUpdate={handleUpdate} 
+              onDelete={handleDelete}
+            />
+          </div>
         ))}
         {filteredEvents.length === 0 && (
           <div className="col-span-full py-12 text-center text-white/40 italic">
