@@ -77,11 +77,11 @@ const QuizArena = () => {
     <div className="p-8 h-full flex flex-col relative overflow-hidden">
       <div className="mb-8 flex justify-between items-end z-10">
         <div>
-          <h2 className="text-4xl font-heading font-bold text-yellow-400 mb-2 flex items-center gap-3 flex-wrap">
+          <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2 flex items-center gap-3 flex-wrap drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]">
             <BrainCircuit size={36} className="text-yellow-400" />
             Quiz Arena (Đấu trường Trắc nghiệm)
             {examCode > 0 && (
-              <span className="text-sm bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full border border-yellow-400/50">
+              <span className="text-sm bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full border border-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.3)]">
                 Mã đề: #{examCode}
               </span>
             )}
@@ -119,10 +119,10 @@ const QuizArena = () => {
             const hasAnswered = selectedOption !== undefined;
 
             return (
-              <div key={q.id} className={`bg-black/40 border rounded-2xl p-6 transition-all ${
+              <div key={q.id} className={`backdrop-blur-md bg-white/5 border rounded-2xl p-6 transition-all duration-300 shadow-glass ${
                 isSubmitted 
-                  ? (isCorrect ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5')
-                  : 'border-white/10'
+                  ? (isCorrect ? 'border-green-500/50 bg-green-500/10 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)]')
+                  : 'border-white/10 hover:border-white/30 hover:bg-white/10'
               }`}>
                 <h4 className="text-xl font-heading font-bold text-white mb-4 flex gap-3">
                   <span className="text-yellow-400">Câu {index + 1}:</span>
@@ -131,18 +131,18 @@ const QuizArena = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {q.options.map((opt, i) => {
-                    let optionStyle = "bg-white/5 border-white/10 text-white/80 hover:bg-white/10";
+                    let optionStyle = "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/30";
                     
                     if (isSubmitted) {
                       if (opt === q.answer) {
-                        optionStyle = "bg-green-500/20 border-green-500 text-white font-bold";
+                        optionStyle = "bg-green-500/20 border-green-500 text-green-400 font-bold shadow-[0_0_15px_rgba(34,197,94,0.3)]";
                       } else if (opt === selectedOption && !isCorrect) {
-                        optionStyle = "bg-red-500/20 border-red-500 text-white/50 line-through";
+                        optionStyle = "bg-red-500/20 border-red-500 text-red-400/50 line-through";
                       } else {
                         optionStyle = "bg-white/5 border-transparent text-white/30";
                       }
                     } else if (opt === selectedOption) {
-                      optionStyle = "bg-yellow-400/20 border-yellow-400 text-yellow-400 font-bold shadow-[0_0_15px_rgba(250,204,21,0.1)]";
+                      optionStyle = "bg-yellow-400/20 border-yellow-400 text-yellow-400 font-bold shadow-[0_0_15px_rgba(250,204,21,0.5)] scale-[1.02]";
                     }
 
                     return (
@@ -159,7 +159,7 @@ const QuizArena = () => {
                 </div>
 
                 {isSubmitted && (
-                  <div className="mt-6 p-4 bg-black/60 rounded-xl border border-white/5">
+                  <div className="mt-6 p-4 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 shadow-inner">
                     <div className="flex items-center gap-2 mb-2">
                       {isCorrect ? (
                         <CheckCircle2 className="text-green-400" size={20} />
@@ -187,7 +187,7 @@ const QuizArena = () => {
             className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-lg text-lg
               ${Object.keys(currentAnswers).length < questions.length 
                 ? 'bg-white/10 text-white/30 cursor-not-allowed' 
-                : 'bg-yellow-400 text-chrono-dark hover:bg-yellow-500 shadow-yellow-400/20'
+                : 'bg-yellow-400 text-chrono-dark hover:bg-yellow-500 shadow-[0_0_20px_rgba(250,204,21,0.5)] scale-105'
               }`}
           >
             <Play size={20} /> Nộp bài & Xem đánh giá

@@ -9,9 +9,14 @@ function App() {
   const [activeTab, setActiveTab] = useState('quiz')
 
   return (
-    <div className="flex h-screen bg-chrono-dark text-white font-body overflow-hidden">
+    <div className="flex h-screen bg-chrono-dark text-white font-body overflow-hidden relative">
+      {/* Nền Cyberpunk (Glowing Orbs) */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-chrono-mint/20 rounded-full blur-[150px] pointer-events-none mix-blend-screen"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-chrono-purple/20 rounded-full blur-[150px] pointer-events-none mix-blend-screen"></div>
+      <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen"></div>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-black/40 border-r border-white/10 flex flex-col z-50">
+      <aside className="w-72 backdrop-blur-xl bg-white/5 border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.5)] flex flex-col z-50 relative">
         <div className="p-6">
           <h1 className="text-3xl font-heading font-black text-transparent bg-clip-text bg-gradient-to-r from-chrono-mint to-chrono-purple tracking-tighter">
             CHRONO-Z
@@ -22,7 +27,7 @@ function App() {
         <nav className="flex-1 px-4 space-y-3 mt-8">
           <button 
             onClick={() => setActiveTab('timeline')}
-            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${activeTab === 'timeline' ? 'bg-chrono-mint/10 text-chrono-mint border border-chrono-mint/30 shadow-[0_0_15px_rgba(0,245,212,0.1)]' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${activeTab === 'timeline' ? 'bg-chrono-mint/10 text-chrono-mint border border-chrono-mint/50 shadow-neon-mint scale-[1.02]' : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10'}`}
           >
             <Clock size={20} className={activeTab === 'timeline' ? 'animate-pulse' : ''} />
             <span className="font-heading font-semibold tracking-wide">Timeline</span>
@@ -30,7 +35,7 @@ function App() {
           
           <button 
             onClick={() => setActiveTab('characters')}
-            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${activeTab === 'characters' ? 'bg-chrono-purple/10 text-chrono-purple border border-chrono-purple/30 shadow-[0_0_15px_rgba(123,44,191,0.1)]' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${activeTab === 'characters' ? 'bg-chrono-purple/10 text-chrono-purple border border-chrono-purple/50 shadow-neon-purple scale-[1.02]' : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10'}`}
           >
             <Users size={20} className={activeTab === 'characters' ? 'animate-pulse' : ''} />
             <span className="font-heading font-semibold tracking-wide">Characters</span>
@@ -38,7 +43,7 @@ function App() {
           
           <button 
             onClick={() => setActiveTab('quiz')}
-            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${activeTab === 'quiz' ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/30 shadow-[0_0_15px_rgba(250,204,21,0.1)]' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${activeTab === 'quiz' ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/50 shadow-[0_0_15px_rgba(250,204,21,0.5)] scale-[1.02]' : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10'}`}
           >
             <BrainCircuit size={20} className={activeTab === 'quiz' ? 'animate-pulse' : ''} />
             <span className="font-heading font-semibold tracking-wide">Quiz Arena</span>
@@ -46,7 +51,7 @@ function App() {
 
           <button 
             onClick={() => setActiveTab('about')}
-            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${activeTab === 'about' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 ${activeTab === 'about' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/50 shadow-neon-blue scale-[1.02]' : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10'}`}
           >
             <Info size={20} className={activeTab === 'about' ? 'animate-pulse' : ''} />
             <span className="font-heading font-semibold tracking-wide">Đóng góp ý kiến</span>

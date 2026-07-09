@@ -45,7 +45,7 @@ const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`w-full h-full bg-black/50 border-2 border-white/10 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 ${isHovered && !editMode ? 'border-yellow-400/50 shadow-[0_0_30px_rgba(250,204,21,0.2)]' : 'hover:border-chrono-purple/50'}`}>
+      <div className={`w-full h-full backdrop-blur-xl bg-white/5 border-2 border-white/10 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 shadow-glass ${isHovered && !editMode ? 'border-chrono-purple/50 shadow-neon-purple scale-[1.02] -translate-y-2' : 'hover:border-white/30'}`}>
         
         {/* Background Glow */}
         <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full blur-3xl opacity-20 ${char.color}`}></div>
@@ -281,7 +281,7 @@ const CharacterHub = () => {
     <div className="p-8 h-full flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-4xl font-heading font-bold text-chrono-purple mb-2">Thẻ Bài Nhân Vật (Agents)</h2>
+          <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-chrono-purple to-pink-500 mb-2 drop-shadow-[0_0_15px_rgba(123,44,191,0.5)]">Thẻ Bài Nhân Vật (Agents)</h2>
           <p className="text-white/60">Hover vào thẻ bài để đọc Wiki. Bật Edit Mode để chỉnh sửa thẻ bài.</p>
         </div>
 
@@ -340,17 +340,16 @@ const CharacterHub = () => {
         )}
       </div>
 
-      {/* TABS */}
       <div className="flex gap-4 mb-6 border-b border-white/10 pb-4">
         <button 
           onClick={() => setActiveTab('vietnam')}
-          className={`px-6 py-2 rounded-xl font-bold uppercase text-sm tracking-wider transition-all duration-300 ${activeTab === 'vietnam' ? 'bg-chrono-mint text-black shadow-[0_0_20px_rgba(0,245,212,0.4)]' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
+          className={`px-6 py-2 rounded-xl font-bold uppercase text-sm tracking-wider transition-all duration-300 ${activeTab === 'vietnam' ? 'bg-chrono-mint text-chrono-dark shadow-neon-mint scale-[1.05]' : 'backdrop-blur-md bg-white/5 border border-white/10 text-white/50 hover:bg-white/10'}`}
         >
           Lịch sử Việt Nam
         </button>
         <button 
           onClick={() => setActiveTab('world')}
-          className={`px-6 py-2 rounded-xl font-bold uppercase text-sm tracking-wider transition-all duration-300 ${activeTab === 'world' ? 'bg-chrono-purple text-white shadow-[0_0_20px_rgba(164,118,255,0.4)]' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
+          className={`px-6 py-2 rounded-xl font-bold uppercase text-sm tracking-wider transition-all duration-300 ${activeTab === 'world' ? 'bg-chrono-purple text-white shadow-neon-purple scale-[1.05]' : 'backdrop-blur-md bg-white/5 border border-white/10 text-white/50 hover:bg-white/10'}`}
         >
           Lịch sử Thế Giới
         </button>

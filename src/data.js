@@ -50,7 +50,7 @@ export const characterData = [
     },
     "color": "bg-purple-500",
     "category": "vietnam",
-    "imageUrl": ""
+    "imageUrl": "/images/1783579779168_grok_image_840b020f_d1d3_4052_945b_dcdecb652e3b.jpg"
   },
   {
     "id": 4,
@@ -67,7 +67,7 @@ export const characterData = [
     },
     "color": "bg-red-500",
     "category": "vietnam",
-    "imageUrl": ""
+    "imageUrl": "/images/1783579790205_grok_image_fbb42ce3_80fe_485e_a892_f0cc39430c4f.jpg"
   },
   {
     "id": 5,
@@ -101,6 +101,6 @@ export const characterData = [
     },
     "color": "bg-gray-500",
     "category": "vietnam",
-    "imageUrl": ""
+    "imageUrl": "/images/1783579798799_ChatGPT_Image_11_05_23_25_thg_6__2026.png"
   }
 ];

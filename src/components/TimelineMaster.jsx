@@ -170,7 +170,7 @@ const TimelineMaster = () => {
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">
         <div>
-          <h2 className="text-4xl font-heading font-bold text-chrono-mint mb-1 flex items-center gap-3">
+          <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-chrono-mint to-blue-400 mb-1 flex items-center gap-3 drop-shadow-[0_0_15px_rgba(0,245,212,0.5)]">
             Dòng thời gian (Timeline)
             {editMode && <span className="text-sm bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full border border-yellow-500/50">Edit Mode</span>}
           </h2>
@@ -240,19 +240,19 @@ const TimelineMaster = () => {
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <button
           onClick={() => handleTabChange('vietnam')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'vietnam' ? 'bg-chrono-mint text-chrono-dark shadow-[0_0_15px_rgba(0,245,212,0.35)]' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === 'vietnam' ? 'bg-chrono-mint text-chrono-dark shadow-neon-mint scale-[1.05]' : 'backdrop-blur-md bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
         >
           <MapPin size={16} /> Lịch sử Việt Nam
         </button>
         <button
           onClick={() => handleTabChange('world')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'world' ? 'bg-chrono-mint text-chrono-dark shadow-[0_0_15px_rgba(0,245,212,0.35)]' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === 'world' ? 'bg-chrono-purple text-white shadow-neon-purple scale-[1.05]' : 'backdrop-blur-md bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
         >
           <Globe2 size={16} /> Lịch sử Thế giới
         </button>
 
         {/* Search */}
-        <div className="flex items-center gap-2 flex-1 min-w-[160px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-2 flex-1 min-w-[160px] backdrop-blur-md bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 shadow-glass focus-within:border-chrono-mint/50 focus-within:shadow-neon-mint transition-all">
           <Search size={16} className="text-white/40 shrink-0" />
           <input
             value={searchQuery}
@@ -280,10 +280,10 @@ const TimelineMaster = () => {
             <button
               key={item.id}
               onClick={() => { setActiveEventId(item.id); setIsFullWikiOpen(false); }}
-              className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-300 ${
                 activeEventId === item.id
-                  ? 'bg-chrono-mint/10 border-chrono-mint shadow-[0_0_10px_rgba(0,245,212,0.15)]'
-                  : 'bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/25'
+                  ? 'backdrop-blur-xl bg-chrono-mint/10 border-chrono-mint shadow-neon-mint scale-[1.02]'
+                  : 'backdrop-blur-md bg-white/5 border-white/10 shadow-glass hover:bg-white/10 hover:border-white/30 hover:scale-[1.01]'
               }`}
             >
               <div className="text-[10px] text-chrono-mint font-bold tracking-widest mb-1 uppercase">{item.period}</div>
@@ -299,8 +299,9 @@ const TimelineMaster = () => {
 
         {/* Cột phải – Chi tiết sự kiện */}
         {activeEvent ? (
-          <div className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-8 overflow-y-auto relative">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-chrono-purple/15 blur-3xl rounded-full pointer-events-none" />
+          <div className="flex-1 backdrop-blur-2xl bg-white/5 border border-white/10 shadow-glass rounded-2xl p-8 overflow-y-auto relative">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-chrono-purple/30 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-chrono-mint/20 blur-[120px] rounded-full pointer-events-none" />
 
             {/* Ảnh (nếu có) */}
             {activeEvent.imageUrl && !editMode && (
@@ -371,7 +372,7 @@ const TimelineMaster = () => {
 
             <div className="space-y-5 relative z-10">
               {/* Basic */}
-              <div className="bg-chrono-mint/5 border border-chrono-mint/20 rounded-xl p-5">
+              <div className="backdrop-blur-md bg-white/5 border border-white/10 shadow-glass rounded-xl p-5 hover:border-chrono-mint/30 transition-all duration-300">
                 {editMode ? (
                   <input 
                     value={activeEvent.basicTitle || 'Thông tin cơ bản'} 
@@ -398,7 +399,7 @@ const TimelineMaster = () => {
               </div>
 
               {/* Advanced */}
-              <div className="bg-chrono-purple/5 border border-chrono-purple/20 rounded-xl p-5">
+              <div className="backdrop-blur-md bg-white/5 border border-white/10 shadow-glass rounded-xl p-5 hover:border-chrono-purple/30 transition-all duration-300">
                 {editMode ? (
                   <input 
                     value={activeEvent.advancedTitle || 'Phân tích chuyên gia'} 
@@ -426,7 +427,7 @@ const TimelineMaster = () => {
 
               {/* Full Wiki Accordion */}
               {(editMode || (activeEvent.full_wiki && activeEvent.full_wiki !== activeEvent.advanced)) && (
-                <div className="border border-yellow-400/25 rounded-xl overflow-hidden">
+                <div className="backdrop-blur-md bg-white/5 border border-yellow-400/25 shadow-glass rounded-xl overflow-hidden hover:border-yellow-400/50 transition-all duration-300">
                   <button
                     onClick={() => !editMode && setIsFullWikiOpen(!isFullWikiOpen)}
                     className={`w-full flex items-center justify-between px-5 py-3.5 bg-yellow-400/8 transition-colors ${editMode ? 'cursor-default' : 'hover:bg-yellow-400/15 cursor-pointer'}`}
