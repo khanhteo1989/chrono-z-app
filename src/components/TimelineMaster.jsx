@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { autoTimelineData as ALL_EVENTS } from '../scannedData';
 import { ChevronRight, Globe2, MapPin, Database, ChevronDown, ChevronUp, Search, Edit3, Save, Image as ImageIcon, CheckCircle2, X, PlusCircle, Trash2 } from 'lucide-react';
 import WikiTooltip from './WikiTooltip';
+import { getAppData, saveAppData } from '../supabase';
 
 const TimelineMaster = () => {
   const [events, setEvents] = useState(ALL_EVENTS);
@@ -12,6 +13,17 @@ const TimelineMaster = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [pwdInput, setPwdInput] = useState("");
+
+  // Tải dữ liệu từ Supabase khi khởi động, fallback về ALL_EVENTS
+  useEffect(() => {
+    let isMounted = true;
+    getAppData('timeline', ALL_EVENTS).then(loadedEvents => {
+      if (isMounted && loadedEvents && Array.isArray(loadedEvents) && loadedEvents.length > 0) {
+        setEvents(loadedEvents);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   // Biến kiểm tra môi trường: true nếu đã build để đưa lên mạng, false nếu đang code (npm run dev)
   const isProduction = import.meta.env.PROD;
@@ -143,17 +155,12 @@ const TimelineMaster = () => {
   const handleSaveData = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(events)
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('✅ Đã lưu dữ liệu thành công vào hệ thống!');
+      const res = await saveAppData('timeline', events);
+      if (res.success) {
+        alert('✅ Đã lưu dữ liệu thành công lên Supabase Database!');
         setEditMode(false);
       } else {
-        alert('Lỗi khi lưu: ' + data.error);
+        alert('Lỗi khi lưu lên Supabase: ' + res.error);
       }
     } catch (err) {
       alert('Lỗi kết nối: ' + err.message);
@@ -180,60 +187,58 @@ const TimelineMaster = () => {
           </p>
         </div>
         
-        {/* Nút bật/tắt Edit Mode và Lưu (Chỉ hiển thị ở Dev Mode) */}
-        {!isProduction && (
-          <div className="flex gap-3 items-center">
-            {editMode ? (
-              <>
-                <button 
-                  onClick={() => setEditMode(false)}
-                  className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
-                >
-                  <X size={16} /> Hủy
-                </button>
-                <button 
-                  onClick={handleSaveData}
-                  disabled={isSaving}
-                  className="px-4 py-2 rounded-xl bg-chrono-mint text-black hover:bg-chrono-mint/80 text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] disabled:opacity-50"
-                >
-                  {isSaving ? <span className="animate-spin">⏳</span> : <Save size={16} />} 
-                  {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                </button>
-              </>
-            ) : showAuth ? (
-              <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/20">
-                <input
-                  type="password"
-                  value={pwdInput}
-                  onChange={(e) => setPwdInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleVerifyPwd()}
-                  placeholder="Mật khẩu Admin..."
-                  autoFocus
-                  className="bg-transparent text-white text-sm px-3 py-1 outline-none w-36"
-                />
-                <button
-                  onClick={handleVerifyPwd}
-                  className="bg-chrono-mint text-black px-3 py-1 rounded-lg text-sm font-bold hover:bg-chrono-mint/80"
-                >
-                  OK
-                </button>
-                <button
-                  onClick={() => setShowAuth(false)}
-                  className="text-white/50 hover:text-white px-2"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ) : (
+        {/* Nút bật/tắt Edit Mode và Lưu */}
+        <div className="flex gap-3 items-center">
+          {editMode ? (
+            <>
               <button 
-                onClick={() => setShowAuth(true)}
-                className="px-4 py-2 rounded-xl border border-chrono-mint/50 text-chrono-mint hover:bg-chrono-mint/10 text-sm font-bold flex items-center gap-2"
+                onClick={() => setEditMode(false)}
+                className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
               >
-                <Edit3 size={16} /> Bật Chỉnh Sửa
+                <X size={16} /> Hủy
               </button>
-            )}
-          </div>
-        )}
+              <button 
+                onClick={handleSaveData}
+                disabled={isSaving}
+                className="px-4 py-2 rounded-xl bg-chrono-mint text-black hover:bg-chrono-mint/80 text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] disabled:opacity-50"
+              >
+                {isSaving ? <span className="animate-spin">⏳</span> : <Save size={16} />} 
+                {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+              </button>
+            </>
+          ) : showAuth ? (
+            <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/20">
+              <input
+                type="password"
+                value={pwdInput}
+                onChange={(e) => setPwdInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleVerifyPwd()}
+                placeholder="Mật khẩu Admin..."
+                autoFocus
+                className="bg-transparent text-white text-sm px-3 py-1 outline-none w-36"
+              />
+              <button
+                onClick={handleVerifyPwd}
+                className="bg-chrono-mint text-black px-3 py-1 rounded-lg text-sm font-bold hover:bg-chrono-mint/80"
+              >
+                OK
+              </button>
+              <button
+                onClick={() => setShowAuth(false)}
+                className="text-white/50 hover:text-white px-2"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowAuth(true)}
+              className="px-4 py-2 rounded-xl border border-chrono-mint/50 text-chrono-mint hover:bg-chrono-mint/10 text-sm font-bold flex items-center gap-2"
+            >
+              <Edit3 size={16} /> Bật Chỉnh Sửa
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs + Search */}

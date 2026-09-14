@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { characterData } from '../data';
 import { wikiData } from '../wikiData';
 import { Shield, Zap, Target, BookOpen, Edit3, X, Save, PlusCircle, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { getAppData, saveAppData } from '../supabase';
 
 const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -211,7 +212,16 @@ const CharacterHub = () => {
   const [pwdInput, setPwdInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const isProduction = import.meta.env.PROD;
+  // Tải dữ liệu từ Supabase khi khởi động, fallback về characterData
+  useEffect(() => {
+    let isMounted = true;
+    getAppData('characters', characterData).then(loadedData => {
+      if (isMounted && loadedData && Array.isArray(loadedData) && loadedData.length > 0) {
+        setEvents(loadedData);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const filteredEvents = useMemo(() => {
     return events.filter(item => item.category === activeTab);
@@ -258,20 +268,15 @@ const CharacterHub = () => {
   const handleSaveData = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('/api/save-characters', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(events)
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ Đã lưu dữ liệu nhân vật thành công!");
+      const res = await saveAppData('characters', events);
+      if (res.success) {
+        alert("✅ Đã lưu dữ liệu nhân vật lên Supabase thành công!");
         setEditMode(false);
       } else {
-        alert("❌ Lỗi: " + data.error);
+        alert("❌ Lỗi khi lưu lên Supabase: " + res.error);
       }
     } catch (error) {
-      alert("❌ Có lỗi xảy ra khi gọi API Save!");
+      alert("❌ Có lỗi xảy ra khi gọi Supabase!");
       console.error(error);
     }
     setIsSaving(false);
@@ -286,58 +291,56 @@ const CharacterHub = () => {
         </div>
 
         {/* Nút bật/tắt Edit Mode */}
-        {!isProduction && (
-          <div className="flex items-center gap-3">
-            {editMode && (
-              <button 
-                onClick={handleAddNew}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-yellow-500 text-black hover:bg-yellow-400 transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]"
-              >
-                <PlusCircle size={16} /> Thêm Thẻ Bài
-              </button>
-            )}
+        <div className="flex items-center gap-3">
+          {editMode && (
+            <button 
+              onClick={handleAddNew}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-yellow-500 text-black hover:bg-yellow-400 transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+            >
+              <PlusCircle size={16} /> Thêm Thẻ Bài
+            </button>
+          )}
 
-            {editMode ? (
-              <>
-                <button 
-                  onClick={() => setEditMode(false)}
-                  className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
-                >
-                  <X size={16} /> Hủy
-                </button>
-                <button 
-                  onClick={handleSaveData}
-                  disabled={isSaving}
-                  className="px-4 py-2 rounded-xl bg-chrono-mint text-black hover:bg-chrono-mint/80 text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] disabled:opacity-50"
-                >
-                  {isSaving ? <span className="animate-spin">⏳</span> : <Save size={16} />} 
-                  {isSaving ? 'Đang lưu...' : 'Lưu'}
-                </button>
-              </>
-            ) : showAuth ? (
-              <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/20">
-                <input
-                  type="password"
-                  value={pwdInput}
-                  onChange={(e) => setPwdInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleVerifyPwd()}
-                  placeholder="Mật khẩu Admin..."
-                  autoFocus
-                  className="bg-transparent text-white text-sm px-3 py-1 outline-none w-36"
-                />
-                <button onClick={handleVerifyPwd} className="bg-chrono-mint text-black px-3 py-1 rounded-lg text-sm font-bold">OK</button>
-                <button onClick={() => setShowAuth(false)} className="text-white/50 hover:text-white px-2"><X size={16} /></button>
-              </div>
-            ) : (
+          {editMode ? (
+            <>
               <button 
-                onClick={() => setShowAuth(true)}
-                className="px-4 py-2 rounded-xl border border-chrono-mint/50 text-chrono-mint hover:bg-chrono-mint/10 text-sm font-bold flex items-center gap-2"
+                onClick={() => setEditMode(false)}
+                className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
               >
-                <Edit3 size={16} /> Bật Chỉnh Sửa
+                <X size={16} /> Hủy
               </button>
-            )}
-          </div>
-        )}
+              <button 
+                onClick={handleSaveData}
+                disabled={isSaving}
+                className="px-4 py-2 rounded-xl bg-chrono-mint text-black hover:bg-chrono-mint/80 text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] disabled:opacity-50"
+              >
+                {isSaving ? <span className="animate-spin">⏳</span> : <Save size={16} />} 
+                {isSaving ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </>
+          ) : showAuth ? (
+            <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/20">
+              <input
+                type="password"
+                value={pwdInput}
+                onChange={(e) => setPwdInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleVerifyPwd()}
+                placeholder="Mật khẩu Admin..."
+                autoFocus
+                className="bg-transparent text-white text-sm px-3 py-1 outline-none w-36"
+              />
+              <button onClick={handleVerifyPwd} className="bg-chrono-mint text-black px-3 py-1 rounded-lg text-sm font-bold">OK</button>
+              <button onClick={() => setShowAuth(false)} className="text-white/50 hover:text-white px-2"><X size={16} /></button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowAuth(true)}
+              className="px-4 py-2 rounded-xl border border-chrono-mint/50 text-chrono-mint hover:bg-chrono-mint/10 text-sm font-bold flex items-center gap-2"
+            >
+              <Edit3 size={16} /> Bật Chỉnh Sửa
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6 border-b border-white/10 pb-4">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Info, Send, Globe, Save, Edit3, X } from 'lucide-react';
 import { aboutData as initialAboutData } from '../aboutData';
+import { getAppData, saveAppData } from '../supabase';
 
 const About = () => {
   const [data, setData] = useState(initialAboutData);
@@ -10,8 +11,17 @@ const About = () => {
   const [pwdInput, setPwdInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Biến kiểm tra môi trường: true nếu đã build để đưa lên mạng, false nếu đang code (npm run dev)
-  const isProduction = import.meta.env.PROD;
+  // Tải dữ liệu từ Supabase khi mở trang
+  useEffect(() => {
+    let isMounted = true;
+    getAppData('about', initialAboutData).then(loadedData => {
+      if (isMounted && loadedData && typeof loadedData === 'object') {
+        setData(loadedData);
+        setEditedData(loadedData);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     if (!editMode) {
@@ -37,21 +47,17 @@ const About = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/save-about', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editedData)
-      });
-      if (response.ok) {
+      const res = await saveAppData('about', editedData);
+      if (res.success) {
         setData(editedData);
-        alert('Lưu thông tin thành công!');
+        alert('✅ Lưu thông tin lên Supabase thành công!');
         setEditMode(false);
       } else {
-        alert('Lỗi khi lưu!');
+        alert('❌ Lỗi khi lưu: ' + res.error);
       }
     } catch (error) {
       console.error(error);
-      alert('Không thể kết nối đến server.');
+      alert('❌ Không thể kết nối đến Supabase.');
     }
     setIsSaving(false);
   };
@@ -68,58 +74,56 @@ const About = () => {
           <p className="text-white/60">Tìm hiểu thêm về mục đích của dự án và liên hệ với tác giả.</p>
         </div>
         
-        {!isProduction && (
-          <div className="flex gap-2">
-            {editMode ? (
-              <>
-                <button 
-                  onClick={() => setEditMode(false)}
-                  className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                >
-                  Huỷ bỏ
-                </button>
-                <button 
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold transition-all"
-                >
-                  <Save size={18} /> {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                </button>
-              </>
-            ) : showAuth ? (
-              <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/20">
-                <input
-                  type="password"
-                  value={pwdInput}
-                  onChange={(e) => setPwdInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleVerifyPwd()}
-                  placeholder="Mật khẩu Admin..."
-                  autoFocus
-                  className="bg-transparent text-white text-sm px-3 py-1 outline-none w-36"
-                />
-                <button
-                  onClick={handleVerifyPwd}
-                  className="bg-blue-400 text-black px-3 py-1 rounded-lg text-sm font-bold hover:bg-blue-500"
-                >
-                  OK
-                </button>
-                <button
-                  onClick={() => setShowAuth(false)}
-                  className="text-white/50 hover:text-white px-2"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ) : (
+        <div className="flex gap-2">
+          {editMode ? (
+            <>
               <button 
-                onClick={() => setShowAuth(true)}
-                className="px-4 py-2 rounded-xl border border-blue-400/50 text-blue-400 hover:bg-blue-400/10 text-sm font-bold flex items-center gap-2"
+                onClick={() => setEditMode(false)}
+                className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
               >
-                <Edit3 size={16} /> Bật Chỉnh Sửa
+                Huỷ bỏ
               </button>
-            )}
-          </div>
-        )}
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold transition-all"
+              >
+                <Save size={18} /> {isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+              </button>
+            </>
+          ) : showAuth ? (
+            <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/20">
+              <input
+                type="password"
+                value={pwdInput}
+                onChange={(e) => setPwdInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleVerifyPwd()}
+                placeholder="Mật khẩu Admin..."
+                autoFocus
+                className="bg-transparent text-white text-sm px-3 py-1 outline-none w-36"
+              />
+              <button
+                onClick={handleVerifyPwd}
+                className="bg-blue-400 text-black px-3 py-1 rounded-lg text-sm font-bold hover:bg-blue-500"
+              >
+                OK
+              </button>
+              <button
+                onClick={() => setShowAuth(false)}
+                className="text-white/50 hover:text-white px-2"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowAuth(true)}
+              className="px-4 py-2 rounded-xl border border-blue-400/50 text-blue-400 hover:bg-blue-400/10 text-sm font-bold flex items-center gap-2"
+            >
+              <Edit3 size={16} /> Bật Chỉnh Sửa
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 flex gap-8 overflow-y-auto z-10 pb-12">
