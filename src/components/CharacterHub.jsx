@@ -6,7 +6,16 @@ import { getAppData, saveAppData } from '../supabase';
 
 const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showBack, setShowBack] = useState(false);
   const deepData = char.wikiId ? wikiData[char.wikiId] : null;
+
+  const currentWikiTitle = char.wikiTitle !== undefined 
+    ? char.wikiTitle 
+    : (deepData?.title || char.name || '');
+
+  const currentWikiContent = char.wikiContent !== undefined 
+    ? char.wikiContent 
+    : (deepData?.content || '');
 
   // Xử lý upload ảnh
   const handleImageDrop = async (e) => {
@@ -26,11 +35,13 @@ const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
           const data = await res.json();
           if (data.success) {
             onUpdate(char.id, 'imageUrl', data.url);
+            return;
           }
         } catch (error) {
-          console.error("Lỗi upload ảnh:", error);
-          alert("Lỗi upload ảnh, xem console!");
+          console.log("Local upload unavailable, saving image as base64 data URL");
         }
+        // Fallback lưu trực tiếp base64 lên Supabase (hoạt động tốt trên Vercel)
+        onUpdate(char.id, 'imageUrl', base64);
       };
       reader.readAsDataURL(file);
     }
@@ -46,7 +57,7 @@ const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`w-full h-full backdrop-blur-xl bg-white/5 border-2 border-white/10 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 shadow-glass ${isHovered && !editMode ? 'border-chrono-purple/50 shadow-neon-purple scale-[1.02] -translate-y-2' : 'hover:border-white/30'}`}>
+      <div className={`w-full h-full backdrop-blur-xl bg-white/5 border-2 border-white/10 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 shadow-glass ${isHovered && !editMode && !showBack ? 'border-chrono-purple/50 shadow-neon-purple scale-[1.02] -translate-y-2' : 'hover:border-white/30'}`}>
         
         {/* Background Glow */}
         <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full blur-3xl opacity-20 ${char.color}`}></div>
@@ -76,20 +87,34 @@ const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
         )}
         
         {/* Front Content */}
-        <div className={`flex flex-col h-full transition-opacity duration-300 ${isHovered && deepData && !editMode ? 'opacity-10 blur-sm' : 'opacity-100'} z-10 relative pointer-events-none`}>
-          <div className="flex justify-between items-start mb-4">
+        <div className={`flex flex-col h-full transition-opacity duration-300 ${(isHovered || showBack) && (currentWikiTitle || currentWikiContent) && !editMode ? 'opacity-10 blur-sm' : 'opacity-100'} z-10 relative pointer-events-none`}>
+          <div className="flex justify-between items-center mb-3">
             <div className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest pointer-events-auto">
               Nhân vật {char.id.toString().padStart(3, '0')}
             </div>
-            {editMode && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onDelete(char.id); }}
-                className="text-red-400 hover:text-red-300 pointer-events-auto p-1.5 bg-black/50 rounded-full"
-                title="Xóa Thẻ Bài"
+
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {/* Nút lật xem/sửa mặt sau SGK */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setShowBack(!showBack); }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${showBack ? 'bg-chrono-mint text-black shadow-neon-mint' : 'bg-white/10 text-white/80 hover:bg-white/20'}`}
+                title={showBack ? "Xem mặt trước" : "Xem / Sửa mặt sau SGK"}
               >
-                <Trash2 size={16} />
+                <BookOpen size={13} />
+                <span>{showBack ? "Mặt trước" : editMode ? "Sửa SGK" : "Mặt sau SGK"}</span>
               </button>
-            )}
+
+              {editMode && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onDelete(char.id); }}
+                  className="text-red-400 hover:text-red-300 p-1.5 bg-black/50 rounded-full hover:bg-red-500/20 transition-colors"
+                  title="Xóa Thẻ Bài"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="text-center mb-4 pointer-events-auto">
@@ -163,39 +188,79 @@ const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
             <div className="text-center w-1/3">
               <div className="flex items-center justify-center gap-1 text-blue-400 mb-1 text-[10px] font-bold"><Zap size={12}/> INT</div>
               {editMode ? (
-                <input type="number" value={char.stats.int} onChange={e => handleChange('stats', {...char.stats, int: Number(e.target.value)})} className="w-10 bg-transparent text-center font-heading font-bold outline-none border-b border-white/30"/>
+                <input type="number" value={char.stats?.int || 0} onChange={e => handleChange('stats', {...char.stats, int: Number(e.target.value)})} className="w-10 bg-transparent text-center font-heading font-bold outline-none border-b border-white/30"/>
               ) : (
-                <div className="font-heading font-bold drop-shadow-md">{char.stats.int}</div>
+                <div className="font-heading font-bold drop-shadow-md">{char.stats?.int}</div>
               )}
             </div>
             <div className="text-center w-1/3 border-l border-white/20">
               <div className="flex items-center justify-center gap-1 text-red-400 mb-1 text-[10px] font-bold"><Shield size={12}/> LDR</div>
               {editMode ? (
-                <input type="number" value={char.stats.ldr} onChange={e => handleChange('stats', {...char.stats, ldr: Number(e.target.value)})} className="w-10 bg-transparent text-center font-heading font-bold outline-none border-b border-white/30"/>
+                <input type="number" value={char.stats?.ldr || 0} onChange={e => handleChange('stats', {...char.stats, ldr: Number(e.target.value)})} className="w-10 bg-transparent text-center font-heading font-bold outline-none border-b border-white/30"/>
               ) : (
-                <div className="font-heading font-bold drop-shadow-md">{char.stats.ldr}</div>
+                <div className="font-heading font-bold drop-shadow-md">{char.stats?.ldr}</div>
               )}
             </div>
             <div className="text-center w-1/3 border-l border-white/20">
               <div className="flex items-center justify-center gap-1 text-chrono-mint mb-1 text-[10px] font-bold"><Target size={12}/> VIS</div>
               {editMode ? (
-                <input type="number" value={char.stats.vis} onChange={e => handleChange('stats', {...char.stats, vis: Number(e.target.value)})} className="w-10 bg-transparent text-center font-heading font-bold outline-none border-b border-white/30"/>
+                <input type="number" value={char.stats?.vis || 0} onChange={e => handleChange('stats', {...char.stats, vis: Number(e.target.value)})} className="w-10 bg-transparent text-center font-heading font-bold outline-none border-b border-white/30"/>
               ) : (
-                <div className="font-heading font-bold drop-shadow-md">{char.stats.vis}</div>
+                <div className="font-heading font-bold drop-shadow-md">{char.stats?.vis}</div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Big Data Overlay (Shows on Hover, disabled in editMode) */}
-        {isHovered && deepData && !editMode && (
-          <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-md p-6 z-20 flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            <h4 className="text-lg font-bold text-white mb-2">{deepData.title}</h4>
-            <p className="text-white/80 leading-relaxed text-sm overflow-y-auto pr-2 custom-scrollbar">
-              {deepData.content}
-            </p>
-            <div className="mt-auto pt-4 text-center">
-              <span className="text-[10px] uppercase tracking-widest text-white/30">Dữ liệu trích xuất từ SGK</span>
+        {/* Back Side: SGK / Wiki Overlay (Shows when toggled or on hover) */}
+        {(showBack || (isHovered && !editMode && (currentWikiTitle || currentWikiContent))) && (
+          <div className="absolute inset-0 bg-gray-950/95 backdrop-blur-xl p-5 z-20 flex flex-col rounded-2xl border-2 border-chrono-mint/40 shadow-neon-mint animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-chrono-mint flex items-center gap-1.5">
+                <BookOpen size={14} /> Dữ liệu trích xuất SGK
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowBack(false)}
+                className="text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-colors"
+              >
+                ← Mặt trước
+              </button>
+            </div>
+
+            {editMode ? (
+              <div className="flex-1 flex flex-col gap-3 overflow-hidden">
+                <div>
+                  <div className="text-[11px] uppercase text-white/60 mb-1 font-bold">Tiêu đề SGK:</div>
+                  <input
+                    value={currentWikiTitle}
+                    onChange={e => handleChange('wikiTitle', e.target.value)}
+                    className="w-full bg-black/60 border border-white/20 rounded-lg px-3 py-1.5 text-sm font-bold text-white outline-none focus:border-chrono-mint transition-colors"
+                    placeholder="VD: Khúc Hạo (Chính sự khoan dung)..."
+                  />
+                </div>
+
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="text-[11px] uppercase text-white/60 mb-1 font-bold">Nội dung SGK chi tiết:</div>
+                  <textarea
+                    value={currentWikiContent}
+                    onChange={e => handleChange('wikiContent', e.target.value)}
+                    className="w-full flex-1 bg-black/60 border border-white/20 rounded-lg p-3 text-sm leading-relaxed text-white/90 outline-none resize-none focus:border-chrono-mint custom-scrollbar transition-colors"
+                    placeholder="Nhập nội dung trích xuất từ SGK..."
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <h4 className="text-lg font-bold text-white mb-2">{currentWikiTitle}</h4>
+                <p className="text-white/80 leading-relaxed text-sm overflow-y-auto pr-2 custom-scrollbar whitespace-pre-line flex-1">
+                  {currentWikiContent}
+                </p>
+              </div>
+            )}
+
+            <div className="mt-3 pt-2 border-t border-white/10 text-center">
+              <span className="text-[10px] uppercase tracking-widest text-white/40">DỮ LIỆU TRÍCH XUẤT TỪ SGK</span>
             </div>
           </div>
         )}
@@ -203,6 +268,7 @@ const CharacterCard = ({ char, editMode, onUpdate, onDelete }) => {
     </div>
   );
 };
+
 
 const CharacterHub = () => {
   const [events, setEvents] = useState(characterData);
@@ -257,6 +323,8 @@ const CharacterHub = () => {
       quote: "Câu nói nổi tiếng",
       modernLink: "Liên hệ Gen Z",
       wikiId: "",
+      wikiTitle: "Dữ liệu SGK nhân vật mới",
+      wikiContent: "Nội dung trích xuất từ SGK...",
       stats: { int: 50, ldr: 50, vis: 50 },
       color: "bg-gray-500",
       category: activeTab,
