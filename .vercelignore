@@ -1,0 +1,6 @@
+venv
+node_modules
+.git
+dist
+database_raw
+*.py
