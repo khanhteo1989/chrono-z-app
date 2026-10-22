@@ -27,3 +27,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rac tu repo cu
+venv/
+__pycache__/

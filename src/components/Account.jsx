@@ -7,12 +7,17 @@ import { myHistory } from '../cms';
 import { POINT_TIERS, tierFor, fmtDate, RARITY } from '../utils';
 
 // ============ TÀI KHOẢN: đăng nhập + tiến độ học tập (điểm/badge/unlock/history) ============
+// Luồng đăng ký học sinh: email + mật khẩu -> Supabase gửi MÃ OTP 6 SỐ về mail -> nhập mã để xác nhận.
+// (Cần bật Authentication → Providers → Email → "Confirm email" trong Supabase.)
+// Admin KHÔNG đăng ký qua đây: admin tạo trong Supabase Dashboard (Users → Add user) rồi chạy 1 câu SQL gán role — xem docs §4.
 export default function Account({ go }) {
   const { user, isAdmin, signOut } = useAuth();
   const { points, unlocks, characters, refresh } = useData();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [register, setRegister] = useState(false);
+  const [phase, setPhase] = useState('form'); // form | otp
+  const [otp, setOtp] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState([]);
@@ -22,9 +27,11 @@ export default function Account({ go }) {
   async function submit(e) {
     e.preventDefault(); setBusy(true); setMessage('');
     try {
-      if (register) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        setMessage(error ? error.message : 'Đã tạo tài khoản. Nếu trường bật xác minh email, hãy mở hộp thư để xác nhận rồi đăng nhập.');
+      if (register && phase === 'form') {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        if (data.session) { setMessage(''); await refresh(); } // auto-confirm đang TẮT -> vào thẳng
+        else setPhase('otp'); // đã gửi mã OTP 6 số về email
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -35,6 +42,47 @@ export default function Account({ go }) {
       setMessage(err.message || 'Không thực hiện được, thử lại nhé.');
     } finally { setBusy(false); }
   }
+
+  async function confirmOtp(e) {
+    e?.preventDefault();
+    if (otp.length !== 6) { setMessage('Mã gồm 6 chữ số trong email.'); return; }
+    setBusy(true); setMessage('');
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'signup' });
+      if (error) throw error;
+      setMessage('Xác nhận thành công — tài khoản đã sẵn sàng!');
+      setPhase('form'); setRegister(false); setOtp('');
+      await refresh();
+    } catch (err) {
+      setMessage(/expired/i.test(err.message || '') ? 'Mã đã hết hạn — bấm "Gửi lại mã".' : (err.message || 'Mã không đúng, kiểm tra lại email.'));
+    } finally { setBusy(false); }
+  }
+
+  async function resendOtp() {
+    setBusy(true); setMessage('');
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    setMessage(error ? error.message : 'Đã gửi lại mã OTP (kiểm tra cả thư mục spam).');
+    setBusy(false);
+  }
+
+  if (!user && phase === 'otp') return (
+    <div className="page">
+      <div className="auth-card page-panel">
+        <Mail size={28} />
+        <h2 className="museum-h2">Nhập mã OTP</h2>
+        <p className="muted">Mã <b>6 chữ số</b> đã gửi tới <b>{email}</b>. Nhập mã để kích hoạt tài khoản.</p>
+        <form onSubmit={confirmOtp}>
+          <input className="field otp-field" inputMode="numeric" pattern="[0-9]*" maxLength={6} placeholder="••••••" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} autoFocus />
+          <div className="auth-row">
+            <button className="btn-primary" disabled={busy}>{busy ? '…' : 'Xác nhận mã'}</button>
+            <button type="button" className="link-btn" onClick={resendOtp} disabled={busy}>Gửi lại mã</button>
+            <button type="button" className="link-btn" onClick={() => { setPhase('form'); setMessage(''); }}>← Về đăng nhập</button>
+          </div>
+        </form>
+        {message && <p role="status" className="auth-msg">{message}</p>}
+      </div>
+    </div>
+  );
 
   async function sendReset() {
     if (!email) { setMessage('Nhập email trước rồi bấm Quên mật khẩu.'); return; }
@@ -47,12 +95,13 @@ export default function Account({ go }) {
       <div className="auth-card page-panel">
         <User size={28} />
         <h2 className="museum-h2">{register ? 'Tạo tài khoản học sinh' : 'Đăng nhập'}</h2>
-        <p className="muted">Tài khoản lưu điểm tích lũy, bộ sưu tập thẻ đã mở khóa và lịch sử Quiz trên máy chủ — đăng nhập ở thiết bị khác vẫn giữ nguyên tiến độ.</p>
+        <p className="muted">Tài khoản lưu điểm tích lũy, bộ sưu tập thẻ đã mở khóa và lịch sử Quiz trên máy chủ — đăng nhập ở thiết bị khác vẫn giữ nguyên tiến độ.
+          {register ? ' Bấm nút xong, mã OTP 6 số sẽ được gửi về email của bạn.' : ''}</p>
         <form onSubmit={submit}>
           <input className="field" type="email" required autoComplete="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
           <input className="field" type="password" required minLength={6} autoComplete={register ? 'new-password' : 'current-password'} placeholder="Mật khẩu (≥ 6 ký tự)" value={password} onChange={e => setPassword(e.target.value)} />
           <div className="auth-row">
-            <button className="btn-primary" disabled={busy}>{busy ? '…' : register ? 'Tạo tài khoản' : 'Đăng nhập'}</button>
+            <button className="btn-primary" disabled={busy}>{busy ? '…' : register ? 'Gửi mã OTP' : 'Đăng nhập'}</button>
             <button type="button" className="link-btn" onClick={() => { setRegister(!register); setMessage(''); }}>{register ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}</button>
             {!register && <button type="button" className="link-btn" onClick={sendReset}>Quên mật khẩu</button>}
           </div>

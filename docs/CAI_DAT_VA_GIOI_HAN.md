@@ -60,25 +60,38 @@ Vào **Supabase → SQL Editor**, paste và chạy lần lượt:
      `log_content_change` (nhật ký), `snapshot_content` (20 phiên bản/nội dung)
 3. Kiểm tra bucket `historlog-media` đã tồn tại (001 tạo). Nếu chưa, tạo thủ công:
    Storage → New bucket → tên `historlog-media` → **public**, giới hạn 8 MB.
+4. **BẬT OTP ĐĂNG KÝ (khuyến nghị)**: Authentication → **Sign In / Providers** →
+   Email → bật **Confirm email**. Từ đây, học sinh bấm "Gửi mã OTP" ở trang Tài
+   khoản sẽ nhận **mã 6 số về email** và phải nhập mã mới dùng được tài khoản.
+   Mặc định Supabase gửi bằng mailer giới hạn ~2 email/giờ — muốn gửi cho cả lớp,
+   vào **Authentication → SMTP settings** điền SMTP Gmail (cần App Password tạo
+   tại myaccount.google.com → Security → App passwords; App Password chỉ nhập vào
+   Supabase Dashboard, KHÔNG đưa vào code/chat).
+   Nếu TẮT Confirm email: học sinh đăng ký xong dùng ngay, không có bước OTP
+   (web vẫn chạy bình thường — code tự nhận biết).
 
 Cả 2 file đều **idempotent** (`if not exists` / `or replace` / `drop policy if exists`)
 → chạy lại nhiều lần an toàn, không mất dữ liệu.
 
 ## 4. TẠO TÀI KHOẢN ADMIN ĐẦU TIÊN (an toàn)
 
-**Không có mật khẩu admin chung, không kiểm tra email ở frontend.**
+**Không có mật khẩu admin chung, không kiểm tra email ở frontend, admin không
+đăng ký qua trang web.**
 
-Cách A — khuyên dùng (SQL Editor):
-```sql
-update public.profiles set role = 'admin'
- where id = (select id from auth.users where email = 'EMAIL_CUA_BAN');
-```
-(đăng ký tài khoản trên web trước, rồi chạy câu này)
+Cách A — **luồng riêng qua email mời (khuyên dùng)**:
+1. Supabase Dashboard → **Authentication → Users → Invite user by email** →
+   nhập email người quản trị. Họ nhận mail, đặt mật khẩu, đăng nhập bình thường
+   (kênh mời này không thể bị người lạ tự đăng ký).
+2. SQL Editor gán quyền:
+   ```sql
+   update public.profiles set role = 'admin'
+    where id = (select id from auth.users where email = 'EMAIL_ADMIN');
+   ```
 
-Cách B — trên website: đăng nhập tài khoản định làm admin → vào `/admin`
-(hoặc tab **Quản trị**) → màn hình **"Tạo Admin đầu tiên"** → bấm nút.
-RPC `bootstrap_admin()` **chỉ hoạt động khi hệ thống chưa có admin nào**, nên
-không ai leo quyền được sau này.
+Cách B — trên website: người định làm admin **Đăng ký** (có OTP) → đăng nhập →
+vào `/admin` → màn **"Tạo Admin đầu tiên"** → bấm nút. RPC `bootstrap_admin()`
+**chỉ hoạt động khi hệ thống chưa có admin nào**, nên không ai leo quyền được
+sau này.
 
 Sau đó: trang **Dashboard → "Đồng bộ dữ liệu cũ (Import)"** cho từng loại
 (events / characters / questions) để đưa 21 sự kiện + 6 nhân vật + 25 câu hỏi

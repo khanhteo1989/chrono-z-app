@@ -377,6 +377,7 @@ a { color: var(--burgundy); cursor: pointer; }
 .auth-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .link-btn { background: none; border: none; color: var(--burgundy); text-decoration: underline; font-size: 13.5px; }
 .auth-msg { font-size: 14px; color: var(--burgundy-deep); }
+.otp-field { letter-spacing: .6em; text-align: center; font-size: 22px; font-weight: 700; }
 .acct-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .acct-points { text-align: center; }
 .acct-points .big-num { font-family: 'Times New Roman', serif; font-size: 52px; color: var(--burgundy); margin: 6px 0; }
