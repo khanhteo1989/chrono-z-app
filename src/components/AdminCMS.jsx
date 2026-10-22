@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Home as HomeIcon, Clock, Map as MapIcon, Users, HelpCircle, Image as ImageIcon,
   Megaphone, Mail, FlaskConical, ScrollText, DatabaseBackup, KeyRound, Save, Trash2,
   Eye, EyeOff, Plus, Upload, Download, GripVertical, X, Check, RefreshCw, ShieldCheck, AlertTriangle,
-  Trophy, MapPin,
+  Trophy, MapPin, Star,
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
@@ -276,6 +276,19 @@ function ItemManager({ kind, done, focus }) {
               <td>{meta.summary(r)}</td>
               <td>{r.published && r.visible !== false ? <span className="pill ok">Hiện</span> : <span className="pill">Ẩn/Bản nháp</span>}</td>
               <td className="row-gap">
+                {kind === 'events' && (
+                  <button
+                    title={r.payload?.featured ? 'Bỏ ghim khỏi Trang chủ' : 'Ghim lên Sự kiện nổi bật Trang chủ'}
+                    style={{ color: r.payload?.featured ? '#f59e0b' : 'inherit' }}
+                    onClick={async () => {
+                      const isF = !!r.payload?.featured;
+                      await upsertItem({ ...r, payload: { ...(r.payload || {}), featured: !isF } });
+                      await done(); load();
+                    }}
+                  >
+                    <Star size={15} fill={r.payload?.featured ? '#f59e0b' : 'none'} />
+                  </button>
+                )}
                 <button title="Sửa" onClick={() => setEditing(JSON.parse(JSON.stringify(r)))}>✏️</button>
                 <button title={r.visible === false || !r.published ? 'Cho hiện' : 'Ẩn đi'} onClick={() => show(r, r.visible === false || !r.published)}>{r.visible === false || !r.published ? <Eye size={15} /> : <EyeOff size={15} />}</button>
                 <button title="Xóa" onClick={() => del(r.id)}><Trash2 size={15} /></button>
@@ -333,6 +346,10 @@ function ItemEditor({ kind, form, setForm, onClose, onSave }) {
           </div>
           <label className="f-label">Toàn văn tư liệu (tùy chọn)<textarea className="field" rows="3" value={p.full_wiki || ''} onChange={e => setP({ full_wiki: e.target.value })} /></label>
           <label className="f-label">Nguồn tham khảo<input className="field" value={p.source || ''} onChange={e => setP({ source: e.target.value })} placeholder="SGK Lịch sử 12, tr.45; Wikimedia…" /></label>
+          <label className="chk" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="checkbox" checked={!!p.featured} onChange={e => setP({ featured: e.target.checked })} />
+            ⭐ <b>Ghim vào "Sự kiện lịch sử nổi bật" ở Trang chủ</b>
+          </label>
         </>}
 
         {kind === 'characters' && <>

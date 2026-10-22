@@ -24,6 +24,7 @@ const evFromLegacy = e => {
     caption: e.image_caption || '',
     causes: e.causes || '', course: e.course || '', results: e.results || '', significance: e.significance || '',
     relatedEvents: [], relatedCharacters: [], relatedMaps: [], relatedQuizzes: [],
+    featured: Boolean(e.featured),
   };
 };
 const evFromCms = c => {
@@ -41,6 +42,8 @@ const evFromCms = c => {
     relatedEvents: p.related_event_ids || [], relatedCharacters: p.related_character_ids || [],
     relatedMaps: p.related_map_ids || [], relatedQuizzes: p.related_quiz_ids || [],
     published: c.published, visible: c.visible !== false, sort: c.sort_order ?? 0,
+    featured: Boolean(p.featured),
+    hidden: Boolean(p.hidden),
   };
 };
 
@@ -114,7 +117,7 @@ export function DataProvider({ children }) {
       const byKey = new Map(cmsNorm.filter(r => r.key.startsWith('ev-') || r.key.startsWith('ch-') || r.key.startsWith('q-')).map(r => [r.key, r]));
       const base = legacyList.map(fromLegacy).map(l => byKey.get(l.key) || l);
       const extras = cmsNorm.filter(r => !byKey.has(r.key));
-      return [...base, ...extras];
+      return [...base, ...extras].filter(r => r.visible !== false && !r.hidden);
     };
     setEvents(merge(autoTimelineData, evFromLegacy, evFromCms, ev));
     setCharacters(merge(characterData, chFromLegacy, chFromCms, ch));

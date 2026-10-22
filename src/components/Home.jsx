@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Clock, Users, BrainCircuit, Map, Send, Megaphone, ChevronRight, BookOpen } from 'lucide-react';
+import { Clock, Users, BrainCircuit, Map, Send, Megaphone, ChevronRight, BookOpen, Star, Trash2, Settings } from 'lucide-react';
+import { getItem, upsertItem, removeItem } from '../cms';
 import { useData } from '../store';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
@@ -19,8 +20,8 @@ const DEFAULT_BLOCKS = {
 };
 
 export default function Home({ go }) {
-  const { pages, events, announcements } = useData();
-  const { user } = useAuth();
+  const { pages, events, announcements, refresh } = useData();
+  const { user, isAdmin } = useAuth();
   const [block, setBlock] = useState(DEFAULT_BLOCKS);
   const [fb, setFb] = useState({ name: '', message: '' });
   const [fbDone, setFbDone] = useState('');
@@ -36,7 +37,61 @@ export default function Home({ go }) {
     } catch { /* giữ mặc định */ }
   }, [pages]);
 
-  const featured = events.filter(e => e.advanced || e.basic).slice(0, 3);
+  const explicitFeatured = events.filter(e => e.featured && e.visible !== false);
+  const featured = explicitFeatured.length > 0
+    ? explicitFeatured.slice(0, 6)
+    : events.filter(e => (e.advanced || e.basic) && e.visible !== false).slice(0, 3);
+
+  async function toggleFeatured(e) {
+    if (!isAdmin) return;
+    try {
+      const isCurrentlyFeatured = !!e.featured;
+      if (e.cmsId) {
+        const item = await getItem(e.cmsId);
+        if (item) {
+          const payload = { ...(item.payload || {}), featured: !isCurrentlyFeatured };
+          await upsertItem({ ...item, payload });
+        }
+      } else {
+        await upsertItem({
+          kind: 'events',
+          legacy_id: e.key,
+          title: e.title,
+          body: e.basic || '',
+          image_url: e.imageUrl || null,
+          published: true,
+          visible: true,
+          payload: { featured: !isCurrentlyFeatured }
+        });
+      }
+      if (refresh) await refresh();
+    } catch (err) {
+      alert('Lỗi thao tác: ' + err.message);
+    }
+  }
+
+  async function deleteFeaturedEvent(e) {
+    if (!isAdmin) return;
+    if (!window.confirm(`Xoá sự kiện "${e.title}" khỏi hệ thống?`)) return;
+    try {
+      if (e.cmsId) {
+        await removeItem(e.cmsId);
+      } else {
+        await upsertItem({
+          kind: 'events',
+          legacy_id: e.key,
+          title: e.title,
+          body: e.basic || '',
+          published: false,
+          visible: false,
+          payload: { hidden: true }
+        });
+      }
+      if (refresh) await refresh();
+    } catch (err) {
+      alert('Lỗi xoá: ' + err.message);
+    }
+  }
   const recent = [...events].sort((a, b) => (b.yearStart || 0) - (a.yearStart || 0)).slice(0, 4);
 
   async function sendFeedback(e) {
@@ -108,10 +163,42 @@ export default function Home({ go }) {
       </section>
 
       <section className="home-block">
-        <h2 className="museum-h2">Sự kiện lịch sử nổi bật</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '1rem' }}>
+          <div>
+            <h2 className="museum-h2" style={{ margin: 0 }}>Sự kiện lịch sử nổi bật</h2>
+            {isAdmin && <small style={{ color: '#f59e0b', display: 'block', marginTop: '4px' }}>👑 Quyền Admin: Bấm [Bỏ ghim] hoặc [Xoá] trực tiếp trên từng thẻ bên dưới.</small>}
+          </div>
+          {isAdmin && (
+            <button className="btn-ghost small" onClick={() => go('admin', { tab: 'timeline' })} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Settings size={14} /> Quản lý danh sách sự kiện
+            </button>
+          )}
+        </div>
         <div className="featured-grid">
           {featured.map(e => (
-            <article key={e.key} className="featured-card">
+            <article key={e.key} className="featured-card" style={{ position: 'relative' }}>
+              {isAdmin && (
+                <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.85)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                  <button
+                    title={e.featured ? 'Bỏ ghim khỏi nổi bật' : 'Ghim làm nổi bật'}
+                    className="btn-ghost small"
+                    onClick={() => toggleFeatured(e)}
+                    style={{ padding: '2px 8px', color: '#f59e0b', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Star size={13} fill={e.featured ? '#f59e0b' : 'none'} />
+                    {e.featured ? 'Bỏ ghim' : 'Ghim'}
+                  </button>
+                  <button
+                    title="Xóa sự kiện này"
+                    className="btn-ghost small"
+                    onClick={() => deleteFeaturedEvent(e)}
+                    style={{ padding: '2px 8px', color: '#ef4444', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Trash2 size={13} />
+                    Xóa
+                  </button>
+                </div>
+              )}
               {e.imageUrl && <img src={e.imageUrl} alt={e.title} />}
               <div className="fc-body">
                 <small>{e.periodText} · {e.region === 'vietnam' ? 'Việt Nam' : 'Thế giới'}</small>

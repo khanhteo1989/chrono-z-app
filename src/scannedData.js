@@ -2,18 +2,6 @@
 
 export const autoTimelineData = [
   {
-    "id": 1,
-    "period": "năm 2026a",
-    "source": "SGK Lịch sử 10 – Biên soạn chuẩn",
-    "category": "vietnam",
-    "title": "1000 năm thăádang long ha hộisd",
-    "basic": "",
-    "advanced": "abc",
-    "full_wiki": "abc",
-    "wikiLinks": {},
-    "imageUrl": "/images/1783574458213_grok_image_0c67acb2_f9e5_44cf_846d_d7826b6d743e.jpg"
-  },
-  {
     "id": 2,
     "period": "Năm 938",
     "source": "SGK Lịch sử 10 – Biên soạn chuẩn",
