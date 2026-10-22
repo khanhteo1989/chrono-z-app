@@ -355,9 +355,8 @@ begin
     into q_json
   from (
     select c.id, c.title as question,
-      (select array_agg(o.opt order by o.r)
-         from (select opt as opt, random() as r
-                 from jsonb_array_elements_text(c.payload->'options')) o) as options
+      (select array_agg(val order by random())
+         from jsonb_array_elements_text(c.payload->'options') as val) as options
     from public.content_items c
     where c.id = any(q_ids)
     order by random()
