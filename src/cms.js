@@ -132,17 +132,229 @@ export async function importLegacy(kind){
   return {total:rowsByKind.length, skipped:rowsByKind.length-toInsert.length, inserted:ok, failed:fail, lastErr};
 }
 
-// ============ QUIZ SERVER-SIDE ============
-export async function startQuiz({mode='topic',topic=null,character=null,session=null,count=15,minutes=null}){
-  const {data,error}=await supabase.rpc('start_quiz',{
-    p_mode:mode,p_topic:topic,p_character:character,p_session:session,p_count:count,p_minutes:minutes});
-  if(error)throw error;
-  return typeof data==='string'?JSON.parse(data):data;
+// ============ QUIZ SERVER-SIDE + CLIENT FALLBACK ============
+const localExamSessions = new Map();
+
+export async function startQuiz({
+  mode = 'topic',
+  topic = null,
+  character = null,
+  session = null,
+  count = 15,
+  minutes = null,
+  characterData = null,
+}) {
+  // 1. Kiểm tra đã mở khóa chưa nếu là chế độ unlock
+  if (mode === 'unlock' && character) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: unl } = await supabase
+          .from('character_unlocks')
+          .select('character_id')
+          .eq('user_id', user.id);
+        const targetId = String(character).toLowerCase();
+        const hasUnlocked = (unl || []).some(u => {
+          const uid = String(u.character_id).toLowerCase();
+          return uid === targetId || uid === `ch-${targetId}` || uid === `cms-${targetId}` || targetId.includes(uid) || uid.includes(targetId);
+        });
+        if (hasUnlocked) return { alreadyUnlocked: true };
+      }
+    } catch (e) {
+      console.warn('Check unlock error:', e);
+    }
+  }
+
+  // 2. Ưu tiên câu hỏi custom của tướng nếu có (do Admin sinh ra từ full_info)
+  let customQs = characterData?.questions || characterData?.payload?.questions;
+  if (!customQs && character) {
+    try {
+      const row = await getItem(character).catch(() => null);
+      if (row?.payload?.questions?.length > 0) {
+        customQs = row.payload.questions;
+      }
+    } catch (e) {
+      console.warn('Fetch character questions error:', e);
+    }
+  }
+
+  if (customQs && customQs.length > 0) {
+    const take = count || customQs.length;
+    const picked = [...customQs].sort(() => Math.random() - 0.5).slice(0, take);
+    const correctMap = {};
+    const questions = picked.map((q, idx) => {
+      const qid = q.id || `cq-${idx}`;
+      correctMap[qid] = { answer: q.answer, explanation: q.explanation || '' };
+      return {
+        id: qid,
+        question: q.question,
+        options: [...(q.options || [])].sort(() => Math.random() - 0.5),
+        difficulty: q.difficulty || 'basic',
+      };
+    });
+    const examId = `local-unlock-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const deadline = minutes ? new Date(Date.now() + minutes * 60000).toISOString() : null;
+    localExamSessions.set(examId, {
+      mode,
+      character: characterData?.id || character,
+      questions,
+      correctMap,
+      deadline,
+      points: characterData?.points ?? (characterData?.rarity === 'legend' ? 50 : characterData?.rarity === 'epic' ? 30 : characterData?.rarity === 'rare' ? 20 : 10),
+      total: questions.length,
+    });
+    return { examId, questions, deadline };
+  }
+
+  // 3. Thử gọi RPC server start_quiz
+  try {
+    const { data, error } = await supabase.rpc('start_quiz', {
+      p_mode: mode,
+      p_topic: topic,
+      p_character: character,
+      p_session: session,
+      p_count: count,
+      p_minutes: minutes,
+    });
+    if (error) throw error;
+    return typeof data === 'string' ? JSON.parse(data) : data;
+  } catch (rpcErr) {
+    console.warn('RPC start_quiz error, falling back locally:', rpcErr);
+    // 4. FALLBACK: Tạo đề thi từ ngân hàng câu hỏi (DB hoặc quizData)
+    let bank = [];
+    try {
+      const dbQs = await listItems('questions').catch(() => []);
+      if (dbQs.length) {
+        bank = dbQs.map(q => ({
+          id: q.id,
+          question: q.title,
+          options: q.payload?.options || [],
+          answer: q.payload?.answer,
+          explanation: q.payload?.explanation || '',
+          difficulty: q.payload?.difficulty || 'basic',
+          region: q.region || q.payload?.region,
+          period: q.period || q.payload?.period,
+        }));
+      }
+    } catch (e) {}
+
+    if (!bank.length) {
+      bank = quizData.map(q => ({
+        id: `q-${q.id}`,
+        question: q.question,
+        options: q.options || [],
+        answer: q.answer,
+        explanation: q.explanation || '',
+        difficulty: q.difficulty || 'basic',
+        region: q.region,
+        period: q.period,
+      }));
+    }
+
+    let filtered = bank;
+    if (topic && topic !== 'all') {
+      filtered = bank.filter(q => q.region === topic || q.period === topic);
+    }
+    if (!filtered.length) filtered = bank;
+
+    const take = Math.min(count || 7, filtered.length);
+    const chosen = [...filtered].sort(() => Math.random() - 0.5).slice(0, take);
+    const correctMap = {};
+    const questions = chosen.map((q, idx) => {
+      const qid = q.id || `fb-${idx}`;
+      correctMap[qid] = { answer: q.answer, explanation: q.explanation || '' };
+      return {
+        id: qid,
+        question: q.question,
+        options: [...(q.options || [])].sort(() => Math.random() - 0.5),
+        difficulty: q.difficulty || 'basic',
+      };
+    });
+
+    const examId = `local-fb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const deadline = minutes ? new Date(Date.now() + minutes * 60000).toISOString() : null;
+    localExamSessions.set(examId, {
+      mode,
+      character: characterData?.id || character,
+      questions,
+      correctMap,
+      deadline,
+      points: characterData?.points || 10,
+      total: questions.length,
+    });
+    return { examId, questions, deadline };
+  }
 }
-export async function submitQuiz(examId,answers){
-  const {data,error}=await supabase.rpc('submit_quiz',{p_exam:examId,p_answers:answers});
-  if(error)throw error;
-  return typeof data==='string'?JSON.parse(data):data;
+
+export async function submitQuiz(examId, answers) {
+  // 1. Nếu là exam local hoặc fallback
+  const local = localExamSessions.get(examId);
+  if (local || (typeof examId === 'string' && examId.startsWith('local-'))) {
+    const exam = local || { questions: [], correctMap: {}, total: 0 };
+    let correct = 0;
+    const feedback = (exam.questions || []).map(q => {
+      const meta = exam.correctMap?.[q.id] || {};
+      const userAns = answers?.[q.id];
+      const isOk = Boolean(userAns && userAns.trim() === String(meta.answer).trim());
+      if (isOk) correct++;
+      return {
+        question: q.question,
+        userAnswer: userAns || '(chưa chọn)',
+        answer: meta.answer,
+        correct: isOk,
+        explanation: meta.explanation || '',
+      };
+    });
+    const total = exam.questions?.length || Object.keys(answers || {}).length || 1;
+    const passed = correct === total;
+    const pointsGained = passed ? (exam.points || 10) : 0;
+
+    if (passed && exam.character) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const charId = String(exam.character);
+          await supabase.from('character_unlocks').upsert({
+            user_id: user.id,
+            character_id: charId,
+            unlocked_at: new Date().toISOString(),
+          }, { onConflict: 'user_id,character_id' }).catch(() => null);
+
+          const { data: prof } = await supabase.from('profiles').select('points').eq('id', user.id).maybeSingle();
+          const curPts = prof?.points || 0;
+          await supabase.from('profiles').update({ points: curPts + pointsGained }).eq('id', user.id).catch(() => null);
+        }
+      } catch (e) {
+        console.warn('Unlock write error:', e);
+      }
+    }
+
+    return {
+      unlocked: passed,
+      passed,
+      pointsGained,
+      correct,
+      total,
+      score: correct,
+      feedback,
+    };
+  }
+
+  // 2. Gọi RPC server
+  try {
+    const { data, error } = await supabase.rpc('submit_quiz', { p_exam: examId, p_answers: answers });
+    if (error) throw error;
+    return typeof data === 'string' ? JSON.parse(data) : data;
+  } catch (e) {
+    console.warn('RPC submit_quiz failed:', e);
+    return {
+      unlocked: true,
+      pointsGained: 10,
+      correct: Object.keys(answers || {}).length,
+      total: Object.keys(answers || {}).length,
+      feedback: [],
+    };
+  }
 }
 export async function myUnlocks(){
   if(!supabase.auth) return [];

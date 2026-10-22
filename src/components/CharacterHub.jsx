@@ -8,7 +8,7 @@ import { wikiData } from '../wikiData';
 
 // ============ THẺ NHÂN VẬT + THỬ THÁCH MỞ KHÓA (server-side) ============
 export default function CharacterHub({ go, focus }) {
-  const { characters, eventByKey, unlocks, points } = useData();
+  const { characters, eventByKey, unlocks, points, refresh } = useData();
   const { user } = useAuth();
   const [region, setRegion] = useState('vietnam');
   const [q, setQ] = useState('');
@@ -49,7 +49,7 @@ export default function CharacterHub({ go, focus }) {
       {openChar && byKey(openChar) && (
         <CharModal char={byKey(openChar)} eventByKey={eventByKey}
           unlocked={user && unlocks.some(u => u.character_id === (byKey(openChar).cmsId || byKey(openChar).id))}
-          user={user} onClose={() => setOpenChar(null)} go={go} />
+          user={user} onClose={() => setOpenChar(null)} go={go} refresh={refresh} />
       )}
     </div>
   );
@@ -69,7 +69,7 @@ function CharCard({ char, unlocked, onOpen }) {
   );
 }
 
-function CharModal({ char, eventByKey, unlocked, user, onClose, go }) {
+function CharModal({ char, eventByKey, unlocked, user, onClose, go, refresh }) {
   const [tab, setTab] = useState('biography');
   const [challenge, setChallenge] = useState(null); // {examId, questions, answers, submitted, result, deadline}
   const r = RARITY[char.rarity] || RARITY.basic;
@@ -83,7 +83,7 @@ function CharModal({ char, eventByKey, unlocked, user, onClose, go }) {
     if (!user) return;
     setChallenge({ loading: true });
     try {
-      const res = await startQuiz({ mode: 'unlock', character: char.cmsId || char.id, minutes: needMin });
+      const res = await startQuiz({ mode: 'unlock', character: char.cmsId || char.id || char.key, minutes: needMin, count: needCount, characterData: char });
       if (res.alreadyUnlocked) { setChallenge({ alreadyUnlocked: true }); return; }
       setChallenge({ examId: res.examId, questions: res.questions || [], answers: {}, submitted: false, deadline: res.deadline || null, secs: null });
     } catch (e) {
@@ -103,6 +103,9 @@ function CharModal({ char, eventByKey, unlocked, user, onClose, go }) {
   async function finish() {
     const res = await submitQuiz(challenge.examId, challenge.answers);
     setChallenge(c => ({ ...c, submitted: true, result: res }));
+    if (res?.unlocked && refresh) {
+      try { refresh(); } catch(e) {}
+    }
   }
 
   return (

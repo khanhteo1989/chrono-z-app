@@ -73,6 +73,7 @@ function MapStage({ map, go, eventByKey, onBack, isAdmin }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [pin, setPin] = useState(null);
+  const [hoverPin, setHoverPin] = useState(null);
   const drag = useRef(null);
   const stageRef = useRef(null);
 
@@ -129,11 +130,29 @@ function MapStage({ map, go, eventByKey, onBack, isAdmin }) {
             <button key={m.idx} className={`map-pin ${pin?.idx === m.idx ? 'on' : ''}`}
               style={{ left: `${m.x}%`, top: `${m.y}%` }}
               onPointerDown={e => e.stopPropagation()}
+              onMouseEnter={() => setHoverPin(m)}
+              onMouseLeave={() => setHoverPin(null)}
               onClick={() => setPin(m === pin ? null : m)}
               title={m.name}>
               <MapPin size={16} fill="currentColor" />
             </button>
           ))}
+
+          {/* Hover popup hiện ảnh và thông tin khi rê chuột vào ghim */}
+          {hoverPin && (hoverPin.image_url || hoverPin.image || hoverPin.description) && (
+            <div className="map-pin-hover-card" style={{ left: `${hoverPin.x}%`, top: `${hoverPin.y}%` }}>
+              {(hoverPin.image_url || hoverPin.image) && (
+                <img src={hoverPin.image_url || hoverPin.image} alt={hoverPin.name} className="hover-pin-img" />
+              )}
+              <div className="hover-pin-body">
+                <b>{hoverPin.name}</b>
+                {hoverPin.description && <p>{hoverPin.description}</p>}
+                {(hoverPin.event_name || hoverPin.event_key) && (
+                  <span className="hover-pin-event">📜 {hoverPin.event_name || hoverPin.event_key}</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <span className="zoom-badge">{Math.round(zoom * 100)}%</span>
       </div>
@@ -143,13 +162,14 @@ function MapStage({ map, go, eventByKey, onBack, isAdmin }) {
         <section className="pin-panel page-panel">
           <h3>{pin.name}</h3>
           <p>{pin.description}</p>
-          {pin.image && <img className="pin-img" src={pin.image} alt={pin.name} />}
-          {ev && (
+          {(pin.image_url || pin.image) && <img className="pin-img" src={pin.image_url || pin.image} alt={pin.name} />}
+          {ev ? (
             <button className="btn-primary" onClick={() => go('timeline', { focus: ev.key })}>
               <ExternalLink size={15} /> Xem sự kiện “{ev.title}” trên Dòng thời gian
             </button>
-          )}
-          {pin.event_key && !ev && <p className="muted small">Sự kiện liên kết chưa có trên Dòng thời gian.</p>}
+          ) : (pin.event_name || pin.event_key) ? (
+            <p className="muted small" style={{ marginTop: 8 }}><b>Sự kiện liên kết:</b> {pin.event_name || pin.event_key}</p>
+          ) : null}
           {pin.source && <p className="source">Nguồn: {pin.source}</p>}
         </section>
       )}

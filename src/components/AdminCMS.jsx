@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Home as HomeIcon, Clock, Map as MapIcon, Users, HelpCircle, Image as ImageIcon,
   Megaphone, Mail, FlaskConical, ScrollText, DatabaseBackup, KeyRound, Save, Trash2,
   Eye, EyeOff, Plus, Upload, Download, GripVertical, X, Check, RefreshCw, ShieldCheck, AlertTriangle,
-  Trophy, MapPin, Star,
+  Trophy, MapPin, Star, Sparkles,
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
@@ -311,6 +311,204 @@ const KIND_META = {
   default: { col: '', summary: () => '' },
 };
 
+
+export function generateCharacterQuestions(character, targetCount = 7, difficulty = "basic") {
+  const name = character.title || character.name || "Nhân vật lịch sử";
+  const p = character.payload || {};
+  const fullText = (p.full_info || "").trim();
+  const bio = (p.biography || "").trim();
+  const ach = (p.achievements || "").trim();
+  const con = (p.contributions || "").trim();
+  const qot = (p.quote || "").trim();
+  const mot = (p.motivation || "").trim();
+  const mod = (p.modern_link || "").trim();
+  const role = (p.role || character.body || "").trim();
+  const era = (p.era || "").trim();
+
+  const combined = [fullText, bio, ach, con, qot, mot, mod].filter(Boolean).join("\n");
+  const questions = [];
+  const usedKeys = new Set();
+
+  function addQuestion(qText, options, answer, explanation) {
+    if (questions.length >= targetCount) return;
+    if (usedKeys.has(qText)) return;
+    usedKeys.add(qText);
+    const cleanOpts = Array.from(new Set([answer, ...options])).slice(0, 4);
+    while (cleanOpts.length < 4) {
+      cleanOpts.push("Phương án dự phòng " + (cleanOpts.length + 1));
+    }
+    const shuffled = [...cleanOpts].sort(() => Math.random() - 0.5);
+    questions.push({
+      id: "q-auto-" + (questions.length + 1) + "-" + Math.random().toString(36).slice(2, 7),
+      question: qText,
+      options: shuffled,
+      answer: answer,
+      explanation: explanation || `Đáp án đúng là: ${answer}.`,
+      difficulty: difficulty,
+    });
+  }
+
+  // 1. Tên húy / tên thật
+  const huyMatch = combined.match(/tên hu[ýy] l[àa]\s*([^,.;()]+)/i) || combined.match(/tên th[ậa]t l[àa]\s*([^,.;()]+)/i);
+  if (huyMatch && huyMatch[1]) {
+    const huy = huyMatch[1].trim();
+    addQuestion(
+      `Tên húy (tên thật) của ${name} được ghi chép trong sử sách là gì?`,
+      [huy, "Lê Lợi", "Lê Khoáng", "Lê Nghi Dân"],
+      huy,
+      `Theo chính sử ghi chép, ${name} có tên húy là ${huy}.`
+    );
+  }
+
+  // 2. Vai trò / Triều đại
+  if (role) {
+    addQuestion(
+      `Trong lịch sử dân tộc, ${name} giữ vai trò / vị thế nổi bật nào?`,
+      [role, "Vị vua mở đầu triều đại", "Tể tướng nắm quyền phụ chính", "Đại tướng quân tổng chỉ huy"],
+      role,
+      `${name} được lịch sử tôn vinh với vị thế: ${role}.`
+    );
+  }
+
+  // 3. Niên đại / Giai đoạn
+  if (era) {
+    addQuestion(
+      `${name} hoạt động tiêu biểu và để lại dấu ấn trong thời kỳ lịch sử nào?`,
+      [era, "Thời kỳ Bắc thuộc", "Thời kỳ Trịnh - Nguyễn phân tranh", "Thời kỳ cận - hiện đại"],
+      era,
+      `${name} gắn liền với giai đoạn lịch sử ${era}.`
+    );
+  }
+
+  // 4. Năm sinh / Năm mất / Thời gian trị vì
+  const yearMatch = combined.match(/(\d{3,4})\s*[–-]\s*(\d{3,4})/);
+  if (yearMatch) {
+    const periodStr = `${yearMatch[1]} – ${yearMatch[2]}`;
+    const alt1 = `${parseInt(yearMatch[1]) - 12} – ${parseInt(yearMatch[2]) - 12}`;
+    const alt2 = `${parseInt(yearMatch[1]) + 20} – ${parseInt(yearMatch[2]) + 20}`;
+    const alt3 = `${parseInt(yearMatch[1]) + 45} – ${parseInt(yearMatch[2]) + 45}`;
+    addQuestion(
+      `Theo niên biểu lịch sử, năm sinh – năm mất (hoặc giai đoạn trị vì/hoạt động) của ${name} là:`,
+      [periodStr, alt1, alt2, alt3],
+      periodStr,
+      `Mốc thời gian chính xác gắn liền với ${name} là ${periodStr}.`
+    );
+  }
+
+  // 5. Câu nói nổi tiếng / Tuyên ngôn
+  if (qot) {
+    addQuestion(
+      `Câu nói / tư tưởng nổi tiếng nào sau đây gắn liền với sự nghiệp của ${name}?`,
+      [`“${qot}”`, "“Đầu thần chưa rơi xuống đất, xin bệ hạ đừng lo”", "“Bao giờ người Tây nhổ hết cỏ nước Nam mới hết người Nam đánh Tây”", "“Hiền tài là nguyên khí của quốc gia”"],
+      `“${qot}”`,
+      `Câu nói bất hủ của ${name} là: “${qot}”.`
+    );
+  }
+
+  // 6. Luật pháp / Văn bản thể chế
+  const lawMatch = combined.match(/(Luật [^,.;()]+|Quốc triều hình luật|bộ luật [^,.;()]+)/i);
+  if (lawMatch) {
+    const law = lawMatch[0].trim();
+    addQuestion(
+      `Bộ luật / văn bản thể chế tiêu biểu nào được ban hành hoặc hoàn thiện dưới thời ${name}?`,
+      [law, "Hình thư thời Lý", "Hoàng Việt luật lệ thời Nguyễn", "Hình luật thời Trần"],
+      law,
+      `${law} là đỉnh cao thành tựu pháp chế gắn với tên tuổi của ${name}.`
+    );
+  }
+
+  // 7. Cải cách hành chính / Đạo thừa tuyên / Lục bộ
+  if (/lục bộ|13 đạo|đạo thừa tuyên|tể tướng/i.test(combined)) {
+    addQuestion(
+      `Điểm đổi mới mang tính đột phá trong bộ máy chính quyền của ${name} là gì?`,
+      ["Bãi bỏ chức Tể tướng, đặt Lục bộ trực tiếp dưới quyền hoàng đế, chia cả nước thành 13 đạo thừa tuyên", "Duy trì quyền lực tối thượng cho các chư hầu dòng họ", "Chia cả nước thành 24 lộ như các triều đại trước", "Giao toàn quyền quản trị cho các quan đại thần đầu triều"],
+      "Bãi bỏ chức Tể tướng, đặt Lục bộ trực tiếp dưới quyền hoàng đế, chia cả nước thành 13 đạo thừa tuyên",
+      `Cuộc cải cách của ${name} đã tập trung quyền lực cao độ, xóa bỏ trung gian và chuyên môn hóa bộ máy cai trị.`
+    );
+  }
+
+  // 8. Văn hóa - Giáo dục - Khoa cử
+  if (/tao đàn|nhị thập bát tú|văn miếu|bia tiến sĩ|khoa cử/i.test(combined)) {
+    addQuestion(
+      `Đóng góp văn hóa - giáo dục đỉnh cao gắn liền với triều đại của ${name} là:`,
+      ["Thành lập Hội Tao Đàn nhị thập bát tú và khuyến khích khoa cử, trọng dụng nhân tài", "Bãi bỏ hoàn toàn các kỳ thi cử Nho học", "Đóng cửa Quốc Tử Giám để giảm chi phí", "Nghiêm cấm sáng tác văn thơ chữ Nôm trong dân gian"],
+      "Thành lập Hội Tao Đàn nhị thập bát tú và khuyến khích khoa cử, trọng dụng nhân tài",
+      `${name} khởi xướng Hội Tao Đàn và phát triển nền giáo dục khoa cử rực rỡ.`
+    );
+  }
+
+  // 9. Bản đồ Hồng Đức / Địa lý
+  if (/bản đồ/i.test(combined)) {
+    addQuestion(
+      `Thành tựu mang tính bước ngoặt về địa lý và khẳng định chủ quyền lãnh thổ dưới thời ${name} là gì?`,
+      ["Vẽ và ban hành bộ bản đồ địa lý toàn quốc đầu tiên (Hồng Đức bản đồ)", "Chia biên giới thành các khu vực tự trị biệt lập", "Thu hồi tất cả tài liệu địa lý lưu hành trong nước", "Nhờ thương nhân phương Tây vẽ bản đồ Đại Việt"],
+      "Vẽ và ban hành bộ bản đồ địa lý toàn quốc đầu tiên (Hồng Đức bản đồ)",
+      `Bộ bản đồ Hồng Đức là công trình địa lý khẳng định chủ quyền lãnh thổ toàn vẹn của Đại Việt thời ${name}.`
+    );
+  }
+
+  // 10. Lý tưởng / Đường lối trị quốc
+  if (mot) {
+    addQuestion(
+      `Tư tưởng cốt lõi và mục tiêu trị quốc của ${name} được thể hiện qua quan điểm nào?`,
+      [mot, "Đóng cửa biên giới để tránh can thiệp từ bên ngoài", "Nhượng bộ quyền lợi dân tộc để duy trì hòa khí", "Tập trung xây dựng cung điện lộng lẫy xa hoa"],
+      mot,
+      `Tư tưởng trị quốc của ${name}: ${mot}.`
+    );
+  }
+
+  // 11. Bài học kinh nghiệm & Liên hệ ngày nay
+  if (mod) {
+    addQuestion(
+      `Từ cuộc đời và sự nghiệp của ${name}, bài học lịch sử sâu sắc nào còn nguyên giá trị đối với thời đại ngày nay?`,
+      [mod, "Tuyển chọn nhân tài chỉ dựa trên quan hệ thân tộc", "Dựa hoàn toàn vào các liên minh ngoại quốc", "Xem nhẹ tính kỷ cương và pháp luật trong quản trị"],
+      mod,
+      `Ý nghĩa và bài học lịch sử từ ${name}: ${mod}.`
+    );
+  }
+
+  // 12. Thành tựu & Chiến công
+  if (ach) {
+    addQuestion(
+      `Thành tựu / chiến công tiêu biểu nhất làm nên danh tiếng của ${name} là:`,
+      [ach.slice(0, 110), "Để nền kinh tế rơi vào suy thoái kéo dài", "Không để lại dấu ấn nào trong sử sách", "Làm suy yếu khối đại đoàn kết toàn dân"],
+      ach.slice(0, 110),
+      `Thành tựu nổi bật: ${ach}.`
+    );
+  }
+
+  // 13. Khai thác từng câu độc lập trong fullText để đạt đúng số lượng
+  const sentences = fullText.split(/[.\n;]+/).map(s => s.trim()).filter(s => s.length > 20);
+  for (const s of sentences) {
+    if (questions.length >= targetCount) break;
+    addQuestion(
+      `Theo nguồn tư liệu lịch sử về ${name}, nhận định nào sau đây là hoàn toàn chuẩn xác?`,
+      [s, `Thời đại của ${name} không chú trọng phát triển đất nước`, `${name} chủ trương bãi bỏ mọi giá trị văn hóa truyền thống`, "Tư liệu không xác nhận công lao"],
+      s,
+      `Chính sử ghi nhận chuẩn xác: "${s}".`
+    );
+  }
+
+  // 14. Fallback an toàn để đảm bảo LUÔN ĐỦ 100% đúng số câu yêu cầu
+  let step = 1;
+  while (questions.length < targetCount) {
+    addQuestion(
+      `Câu hỏi ôn tập số ${step}: Giá trị lịch sử to lớn nhất mà ${name} để lại cho hậu thế là gì?`,
+      [
+        `Đóng góp to lớn cho sự độc lập, hưng thịnh và vị thế của dân tộc trong giai đoạn ${era || "lịch sử"}`,
+        "Làm cạn kiệt ngân khố quốc gia",
+        "Chỉ tập trung vào lợi ích của riêng hoàng tộc",
+        "Làm mai một truyền thống yêu nước của dân tộc",
+      ],
+      `Đóng góp to lớn cho sự độc lập, hưng thịnh và vị thế của dân tộc trong giai đoạn ${era || "lịch sử"}`,
+      `${name} là biểu tượng sáng ngời về lòng yêu nước và tài năng lãnh đạo trong lịch sử dân tộc.`
+    );
+    step++;
+  }
+
+  return questions.slice(0, targetCount);
+}
+
 function ItemEditor({ kind, form, setForm, onClose, onSave }) {
   const [imgBusy, setImgBusy] = useState('');
   const p = form.payload || {};
@@ -352,23 +550,158 @@ function ItemEditor({ kind, form, setForm, onClose, onSave }) {
           </label>
         </>}
 
-        {kind === 'characters' && <>
-          <div className="f-row2">
-            <label className="f-label">Vai trò<input className="field" value={p.role || ''} onChange={e => setP({ role: e.target.value })} /></label>
-            <label className="f-label">Giai đoạn<input className="field" value={p.era || ''} onChange={e => setP({ era: e.target.value })} /></label>
-            <label className="f-label">Nhánh<select className="field" value={p.region || 'vietnam'} onChange={e => setP({ region: e.target.value })}><option value="vietnam">Việt Nam</option><option value="world">Thế giới</option></select></label>
-            <label className="f-label">Độ hiếm<select className="field" value={p.rarity || 'basic'} onChange={e => setP({ rarity: e.target.value })}>{Object.entries(RARITY).map(([k, v]) => <option key={k} value={k}>{v.label} ({v.count} câu{v.minutes ? `/${v.minutes}′` : ''} · {v.points}đ)</option>)}</select></label>
-          </div>
-          <label className="f-label">Câu nói nổi tiếng<input className="field" value={p.quote || ''} onChange={e => setP({ quote: e.target.value })} /></label>
-          <label className="f-label">Tiểu sử<textarea className="field" rows="3" value={p.biography || ''} onChange={e => setP({ biography: e.target.value })} /></label>
-          <div className="f-row2">
-            <label className="f-label">Thành tựu<textarea className="field" rows="2" value={p.achievements || ''} onChange={e => setP({ achievements: e.target.value })} /></label>
-            <label className="f-label">Đóng góp<textarea className="field" rows="2" value={p.contributions || ''} onChange={e => setP({ contributions: e.target.value })} /></label>
-            <label className="f-label">Lý tưởng<textarea className="field" rows="2" value={p.motivation || ''} onChange={e => setP({ motivation: e.target.value })} /></label>
-            <label className="f-label">Liên hệ hôm nay<textarea className="field" rows="2" value={p.modern_link || ''} onChange={e => setP({ modern_link: e.target.value })} /></label>
-          </div>
-          <p className="muted small">Trường thử thách: số câu ({p.unlock_count ?? RARITY[p.rarity || 'basic'].count}) — đặt khác nếu muốn; thời gian phút: {p.unlock_minutes ?? 'không giới hạn'}; điểm thưởng: {p.points ?? RARITY[p.rarity || 'basic'].points}. Học sinh đã mở khóa sẽ KHÔNG mất trạng thái khi bạn sửa thẻ.</p>
-        </>}
+        {kind === 'characters' && (() => {
+          const curRarity = p.rarity || 'basic';
+          const rarityInfo = RARITY[curRarity] || RARITY.basic;
+          const targetCount = p.unlock_count ?? rarityInfo.count;
+          const diffMap = { basic: 'Nhận biết (Dễ)', rare: 'Thông hiểu (Trung bình)', epic: 'Vận dụng (Khó)', legend: 'Vận dụng cao (Rất khó)' };
+          const diffLabel = diffMap[curRarity] || 'Nhận biết';
+          const diffKey = curRarity === 'legend' ? 'expert' : curRarity === 'epic' ? 'advanced' : curRarity === 'rare' ? 'medium' : 'basic';
+
+          function handleAutoGenerateQuestions() {
+            const qs = generateCharacterQuestions(form, targetCount, diffKey);
+            setP({ questions: qs, unlock_count: qs.length });
+          }
+
+          function patchQuestion(idx, patch) {
+            const list = [...(p.questions || [])];
+            list[idx] = { ...list[idx], ...patch };
+            setP({ questions: list });
+          }
+
+          function handleDeleteQuestion(idx) {
+            const list = (p.questions || []).filter((_, i) => i !== idx);
+            setP({ questions: list, unlock_count: list.length });
+          }
+
+          function handleAddEmptyQuestion() {
+            const list = [...(p.questions || [])];
+            list.push({
+              id: 'q-manual-' + (list.length + 1) + '-' + Math.random().toString(36).slice(2, 6),
+              question: 'Câu hỏi mới về ' + (form.title || 'nhân vật') + '?',
+              options: ['Phương án đúng', 'Phương án sai 1', 'Phương án sai 2', 'Phương án sai 3'],
+              answer: 'Phương án đúng',
+              explanation: 'Giải thích đáp án...',
+              difficulty: diffKey,
+            });
+            setP({ questions: list, unlock_count: list.length });
+          }
+
+          return (
+            <>
+              <div className="f-row2">
+                <label className="f-label">Vai trò<input className="field" value={p.role || ''} onChange={e => setP({ role: e.target.value })} /></label>
+                <label className="f-label">Giai đoạn<input className="field" value={p.era || ''} onChange={e => setP({ era: e.target.value })} /></label>
+                <label className="f-label">Nhánh<select className="field" value={p.region || 'vietnam'} onChange={e => setP({ region: e.target.value })}><option value="vietnam">Việt Nam</option><option value="world">Thế giới</option></select></label>
+                <label className="f-label">Độ hiếm<select className="field" value={p.rarity || 'basic'} onChange={e => {
+                  const rKey = e.target.value;
+                  const rObj = RARITY[rKey] || RARITY.basic;
+                  setP({ rarity: rKey, unlock_count: rObj.count, unlock_minutes: rObj.minutes, points: rObj.points });
+                }}>{Object.entries(RARITY).map(([k, v]) => <option key={k} value={k}>{v.label} ({v.count} câu{v.minutes ? `/${v.minutes}′` : ''} · {v.points}đ)</option>)}</select></label>
+              </div>
+
+              {/* Ô NHẬP TOÀN BỘ THÔNG TIN NHÂN VẬT (Yêu cầu thêm của người dùng) */}
+              <label className="f-label">
+                <b>Toàn bộ thông tin nhân vật (Nhập để hệ thống tự sinh câu hỏi chuẩn theo độ hiếm)</b>
+                <textarea
+                  className="field"
+                  rows="6"
+                  value={p.full_info || ''}
+                  onChange={e => setP({ full_info: e.target.value })}
+                  placeholder="Dán toàn bộ thông tin nhân vật: tên húy, năm sinh - năm mất, quê quán, dòng dõi, cuộc đời, sự nghiệp, các cải cách, chiến công, tác phẩm, câu nói nổi tiếng, đóng góp lịch sử..."
+                />
+              </label>
+
+              {/* Nút tự động sinh câu hỏi theo độ hiếm */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', margin: '6px 0 12px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleAutoGenerateQuestions}
+                  disabled={!form.title && !p.full_info}
+                >
+                  <Sparkles size={15} /> ⚡ Tự động sinh câu hỏi theo độ hiếm ({targetCount} câu · {rarityInfo.label})
+                </button>
+                {p.questions?.length > 0 && (
+                  <span className="success" style={{ fontSize: '13px', fontWeight: 600 }}>
+                    ✓ Đã có {p.questions.length}/{targetCount} câu hỏi ({diffLabel})
+                  </span>
+                )}
+              </div>
+
+              {/* Danh sách câu hỏi sinh ra để Admin xem và chỉnh sửa */}
+              {p.questions?.length > 0 && (
+                <div className="char-q-box">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <b>Danh sách câu hỏi thử thách mở khóa ({p.questions.length} câu):</b>
+                    <button type="button" className="btn-ghost" style={{ fontSize: '12px', padding: '3px 8px' }} onClick={handleAddEmptyQuestion}>+ Thêm câu hỏi</button>
+                  </div>
+                  <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {p.questions.map((qItem, qIdx) => (
+                      <div key={qIdx} className="char-q-item">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--burgundy)' }}>Câu {qIdx + 1} ({qItem.difficulty || 'basic'}):</span>
+                          <button type="button" className="btn-ghost" style={{ padding: '2px 5px', color: '#c0392b' }} title="Xóa câu này" onClick={() => handleDeleteQuestion(qIdx)}><Trash2 size={13} /></button>
+                        </div>
+                        <input
+                          className="field"
+                          style={{ width: '100%', marginTop: '4px', fontSize: '13px' }}
+                          value={qItem.question || ''}
+                          onChange={e => patchQuestion(qIdx, { question: e.target.value })}
+                          placeholder="Nội dung câu hỏi..."
+                        />
+                        <div className="char-q-opts">
+                          {(qItem.options || []).map((opt, optIdx) => (
+                            <div key={optIdx} className={`char-q-opt ${opt === qItem.answer ? 'is-ans' : ''}`}>
+                              <input
+                                type="radio"
+                                name={`ans-${qIdx}`}
+                                checked={opt === qItem.answer}
+                                onChange={() => patchQuestion(qIdx, { answer: opt })}
+                                title="Chọn làm đáp án đúng"
+                              />
+                              <input
+                                className="field"
+                                style={{ flex: 1, fontSize: '12px', padding: '3px 6px' }}
+                                value={opt}
+                                onChange={e => {
+                                  const newOpts = [...qItem.options];
+                                  newOpts[optIdx] = e.target.value;
+                                  const isCurAns = opt === qItem.answer;
+                                  patchQuestion(qIdx, {
+                                    options: newOpts,
+                                    answer: isCurAns ? e.target.value : qItem.answer
+                                  });
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <input
+                          className="field"
+                          style={{ width: '100%', marginTop: '4px', fontSize: '12px' }}
+                          value={qItem.explanation || ''}
+                          onChange={e => patchQuestion(qIdx, { explanation: e.target.value })}
+                          placeholder="Giải thích đáp án..."
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <label className="f-label">Câu nói nổi tiếng<input className="field" value={p.quote || ''} onChange={e => setP({ quote: e.target.value })} /></label>
+              <label className="f-label">Tiểu sử<textarea className="field" rows="3" value={p.biography || ''} onChange={e => setP({ biography: e.target.value })} /></label>
+              <div className="f-row2">
+                <label className="f-label">Thành tựu<textarea className="field" rows="2" value={p.achievements || ''} onChange={e => setP({ achievements: e.target.value })} /></label>
+                <label className="f-label">Đóng góp<textarea className="field" rows="2" value={p.contributions || ''} onChange={e => setP({ contributions: e.target.value })} /></label>
+                <label className="f-label">Lý tưởng<textarea className="field" rows="2" value={p.motivation || ''} onChange={e => setP({ motivation: e.target.value })} /></label>
+                <label className="f-label">Liên hệ hôm nay<textarea className="field" rows="2" value={p.modern_link || ''} onChange={e => setP({ modern_link: e.target.value })} /></label>
+              </div>
+              <p className="muted small">Trường thử thách: số câu ({targetCount}) — tự sinh chuẩn theo độ hiếm {rarityInfo.label}; thời gian phút: {p.unlock_minutes ?? (rarityInfo.minutes ? `${rarityInfo.minutes} phút` : 'không giới hạn')}; điểm thưởng: {p.points ?? rarityInfo.points}. Học sinh đã mở khóa sẽ KHÔNG mất trạng thái khi bạn sửa thẻ.</p>
+            </>
+          );
+        })()}
 
         {kind === 'announcements' && <label className="f-label">Nội dung thông báo<textarea className="field" rows="3" value={form.body} onChange={e => set({ body: e.target.value })} /></label>}
 
@@ -505,14 +838,77 @@ function MapEditor({ row, setRow, onClose, onSave }) {
         <b>Danh sách ghim ({markers.length}) — sửa, gắn sự kiện, xóa:</b>
         <div className="pin-list">
           {markers.map((m, i) => (
-            <div key={i} className="pin-row page-panel">
+            <div key={i} className="pin-row page-panel" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <GripVertical size={14} />
-              <input className="field" value={m.name} placeholder="Địa danh" onChange={e => patch(i, { name: e.target.value })} />
-              <input className="field grow" value={m.description} placeholder="Mô tả ngắn" onChange={e => patch(i, { description: e.target.value })} />
-              <select className="field" value={m.event_key || ''} onChange={e => patch(i, { event_key: e.target.value })}>
-                <option value="">— không gắn sự kiện —</option>
-                {events.map(ev => <option key={ev.key} value={ev.key}>{ev.periodText} · {ev.title.slice(0, 48)}</option>)}
-              </select>
+              {/* Ô 1: Tên / Địa danh */}
+              <input
+                className="field"
+                style={{ width: '130px', minWidth: '100px' }}
+                value={m.name || ''}
+                placeholder="Tên / Địa danh"
+                onChange={e => patch(i, { name: e.target.value })}
+              />
+
+              {/* Ô 2 (ở giữa): Mô tả sự kiện + Thêm ảnh */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 1, minWidth: '240px' }}>
+                <input
+                  className="field grow"
+                  value={m.description || ''}
+                  placeholder="Mô tả sự kiện / ghi chú"
+                  onChange={e => patch(i, { description: e.target.value })}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {(m.image_url || m.image) && (
+                    <img
+                      src={m.image_url || m.image}
+                      alt="Ghim"
+                      style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--line)' }}
+                    />
+                  )}
+                  <input
+                    className="field"
+                    style={{ width: '110px' }}
+                    value={m.image_url || m.image || ''}
+                    placeholder="URL ảnh..."
+                    onChange={e => patch(i, { image_url: e.target.value, image: e.target.value })}
+                  />
+                  <label className="btn-ghost file-btn" style={{ padding: '5px 8px', cursor: 'pointer' }} title="Tải ảnh cho ghim này">
+                    <ImageIcon size={14} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        try {
+                          const url = await uploadImage(f);
+                          patch(i, { image_url: url, image: url });
+                        } catch (err) { alert(err.message); }
+                      }}
+                      hidden
+                    />
+                  </label>
+                  {(m.image_url || m.image) && (
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      style={{ padding: '2px 6px' }}
+                      title="Bỏ ảnh"
+                      onClick={() => patch(i, { image_url: '', image: '' })}
+                    >✕</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Ô 3: Tự viết tự do (không chọn dropdown mặc định) */}
+              <input
+                className="field"
+                style={{ width: '180px', minWidth: '140px' }}
+                value={m.event_name || m.event_key || ''}
+                placeholder="Tên sự kiện tự nhập..."
+                onChange={e => patch(i, { event_name: e.target.value, event_key: e.target.value })}
+              />
+
               <button title="Xóa ghim" onClick={() => setP({ markers: markers.filter((_, j) => j !== i) })}><Trash2 size={14} /></button>
             </div>
           ))}

@@ -70,6 +70,9 @@ const chFromCms = c => {
     imageUrl: c.image_url || '',
     unlockCount: p.unlock_count ?? null, unlockMinutes: p.unlock_minutes ?? null, points: p.points ?? null,
     relatedEvents: p.related_event_ids || [], ref: p.source || '',
+    fullInfo: p.full_info || '',
+    questions: p.questions || [],
+    payload: p,
     published: c.published, visible: c.visible !== false,
   };
 };
