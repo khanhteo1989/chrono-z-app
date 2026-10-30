@@ -117,14 +117,27 @@ export default function Home({ go }) {
         </div>
       )}
 
-      <section className="hero-band" style={{ backgroundImage: `linear-gradient(rgba(23,19,23,.55),rgba(23,19,23,.8)), url(${(block.hero.image && block.hero.image.trim()) || '/images/home-hero.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <div className="hero-parallelogram">
-          <h1 className="museum-h1">{block.hero.title}</h1>
-          <p className="hero-slogan">{block.hero.subtitle}</p>
-          <p className="hero-desc">{block.hero.desc}</p>
-          <div className="hero-cta">
-            <button className="btn-primary" onClick={() => go('timeline')}>Bắt đầu khám phá <ChevronRight size={16} /></button>
-            {!user && <button className="btn-ghost" onClick={() => go('account')}>Đăng nhập để lưu tiến độ</button>}
+      <section className="hero-showcase">
+        <div className="hero-brand-card">
+          <div className="hero-artwork-wrap">
+            <img
+              src={(block.hero.image && block.hero.image.trim()) || '/images/home-hero.jpg'}
+              alt="HISTORLOG-Z - History and Technology"
+              className="hero-artwork-img"
+            />
+          </div>
+          <div className="hero-card-content">
+            {block.hero.desc && <p className="hero-card-desc">{block.hero.desc}</p>}
+            <div className="hero-card-cta">
+              <button className="btn-primary" onClick={() => go('timeline')}>
+                Bắt đầu khám phá <ChevronRight size={16} />
+              </button>
+              {!user && (
+                <button className="btn-ghost hero-login-btn" onClick={() => go('account')}>
+                  Đăng nhập để lưu tiến độ
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </section>
