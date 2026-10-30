@@ -131,7 +131,6 @@ function CharModal({ char, eventByKey, unlocked, user, onClose, go, refresh }) {
             {(char.biography || wikiContent) && <p>{char.biography || wikiContent}</p>}
             {char.motivation && <p><b>Lý tưởng:</b> {char.motivation}</p>}
             {char.modernLink && <p><b>Liên hệ hôm nay:</b> {char.modernLink}</p>}
-            {char.stats && <div className="stats-row">{Object.entries(char.stats).map(([k, v]) => <div key={k}><small>{k.toUpperCase()}</small><b>{v}</b></div>)}</div>}
             {char.ref && <p className="source">Nguồn: {char.ref}. {char.imageUrl ? 'Hình chân dung là tranh minh họa/phục dựng, không phải ảnh tư liệu gốc.' : ''}</p>}
           </div>
         )}
