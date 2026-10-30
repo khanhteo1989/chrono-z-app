@@ -51,7 +51,9 @@ function Shell() {
     <div className="app-shell">
       <header className="topbar">
         <button className="brand" onClick={() => go('home')}>
-          <span className="brand-mark">H</span>
+          <span className="brand-mark">
+            <img src="/images/avatar.png" alt="HISTORLOG-Z Logo" />
+          </span>
           <span className="brand-text"><b>HISTORLOG-Z</b><small>History and Technology</small></span>
         </button>
 

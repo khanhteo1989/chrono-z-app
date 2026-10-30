@@ -37,11 +37,13 @@ a { color: var(--burgundy); cursor: pointer; }
 }
 .brand { display: flex; align-items: center; gap: 10px; background: none; border: none; color: #fff; text-align: left; }
 .brand-mark {
-  width: 38px; height: 38px; display: grid; place-items: center; font-family: 'Times New Roman', serif;
-  font-size: 24px; font-weight: bold; color: var(--gold); background: var(--burgundy);
-  transform: skewX(-12deg); border: 1px solid var(--bronze);
+  width: 36px; height: 40px; display: grid; place-items: center;
+  background: transparent; border: none; transform: none; flex-shrink: 0;
 }
-.brand-mark span, .brand-mark { transform: skewX(-12deg); }
+.brand-mark img {
+  width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .4));
+}
 .brand-text b { display: block; color: #f3ead9; letter-spacing: 1px; font-size: 16px; }
 .brand-text small { color: var(--bronze); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
 .main-nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }

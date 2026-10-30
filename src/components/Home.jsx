@@ -8,7 +8,7 @@ import { useAuth } from '../auth';
 // ============ TRANG CHỦ HISTORLOG-Z ============
 // Khối nội dung đọc từ CMS (kind=pages, payload.section), fallback giá trị mặc định.
 const DEFAULT_BLOCKS = {
-  hero: { title: 'HISTORLOG-Z', subtitle: 'History and Technology', desc: 'Nền tảng học Lịch sử tương tác: Dòng thời gian, Bản đồ, Thẻ nhân vật và Chrono-Quiz — dành cho học sinh THPT.', image: '' },
+  hero: { title: 'HISTORLOG-Z', subtitle: 'History and Technology', desc: 'Nền tảng học Lịch sử tương tác: Dòng thời gian, Bản đồ, Thẻ nhân vật và Chrono-Quiz — dành cho học sinh THPT.', image: '/images/home-hero.jpg' },
   intro: { title: 'Giới thiệu', content: 'HISTORLOG-Z số hoá kiến thức Lịch sử Việt Nam và Thế giới thành trải nghiệm khám phá: đọc sự kiện theo dòng thời gian, định vị trên bản đồ lịch sử, mở khóa thẻ nhân vật qua thử thách câu hỏi và kiểm tra kiến thức bằng Quiz được chấm điểm minh bạch.' },
   guide: { title: 'Hướng dẫn sử dụng', steps: [
     'Tạo tài khoản ở mục Tài khoản để lưu tiến độ học tập.',
@@ -117,7 +117,7 @@ export default function Home({ go }) {
         </div>
       )}
 
-      <section className="hero-band" style={block.hero.image ? { backgroundImage: `linear-gradient(rgba(23,19,23,.55),rgba(23,19,23,.8)), url(${block.hero.image})` } : undefined}>
+      <section className="hero-band" style={{ backgroundImage: `linear-gradient(rgba(23,19,23,.55),rgba(23,19,23,.8)), url(${(block.hero.image && block.hero.image.trim()) || '/images/home-hero.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="hero-parallelogram">
           <h1 className="museum-h1">{block.hero.title}</h1>
           <p className="hero-slogan">{block.hero.subtitle}</p>

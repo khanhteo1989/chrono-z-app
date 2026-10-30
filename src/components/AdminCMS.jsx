@@ -181,7 +181,7 @@ function HomeManager({ done }) {
     await upsertItem({ ...(existing || {}), kind: 'pages', title: payload.title || section, body: '', published: true, visible: true, legacy_id: existing?.legacy_id || `page-${section}`, payload: { ...payload, section } });
     await done(); load();
   }
-  const [hero, setHero] = useState({ title: 'HISTORLOG-Z', subtitle: 'History and Technology', desc: '', image: '' });
+  const [hero, setHero] = useState({ title: 'HISTORLOG-Z', subtitle: 'History and Technology', desc: '', image: '/images/home-hero.jpg' });
   const [intro, setIntro] = useState({ title: 'Giới thiệu', content: '' });
   const [guide, setGuide] = useState({ title: 'Hướng dẫn sử dụng', steps: '' });
   useEffect(() => {
