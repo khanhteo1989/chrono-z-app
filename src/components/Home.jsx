@@ -127,7 +127,9 @@ export default function Home({ go }) {
             />
           </div>
           <div className="hero-card-content">
-            {block.hero.desc && <p className="hero-card-desc">{block.hero.desc}</p>}
+            <p className="hero-card-desc">
+              {block.hero.desc || 'Nền tảng học Lịch sử tương tác: Dòng thời gian, Bản đồ, Thẻ nhân vật và Chrono-Quiz — dành cho học sinh THPT.'}
+            </p>
             <div className="hero-card-cta">
               <button className="btn-primary" onClick={() => go('timeline')}>
                 Bắt đầu khám phá <ChevronRight size={16} />
