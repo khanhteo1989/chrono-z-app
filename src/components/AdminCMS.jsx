@@ -851,11 +851,17 @@ function MapEditor({ row, setRow, onClose, onSave }) {
 
               {/* Ô 2 (ở giữa): Mô tả sự kiện + Thêm ảnh */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 1, minWidth: '240px' }}>
-                <input
-                  className="field grow"
+                <textarea
+                  className="field grow pin-desc"
+                  rows={1}
                   value={m.description || ''}
-                  placeholder="Mô tả sự kiện / ghi chú"
-                  onChange={e => patch(i, { description: e.target.value })}
+                  placeholder="Mô tả sự kiện / ghi chú (Enter để xuống dòng)"
+                  onChange={e => {
+                    patch(i, { description: e.target.value });
+                    const t = e.currentTarget;
+                    t.style.height = 'auto';
+                    t.style.height = `${t.scrollHeight}px`;
+                  }}
                 />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   {(m.image_url || m.image) && (

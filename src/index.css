@@ -461,6 +461,10 @@ a { color: var(--burgundy); cursor: pointer; }
 .pin-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 16px; max-height: 260px; overflow-y: auto; }
 .pin-row { display: flex; gap: 8px; align-items: center; padding: 10px; }
 .pin-row .field { font-size: 13px; padding: 8px 10px; }
+/* Ô mô tả ghim cho phép xuống dòng: textarea tự giãn theo nội dung */
+.pin-row textarea.pin-desc { min-height: 38px; max-height: 160px; line-height: 1.45; resize: vertical; overflow-y: auto; }
+/* Giữ nguyên xuống dòng khi hiển thị mô tả ghim cho học sinh */
+.hover-pin-body p, .pin-panel p { white-space: pre-line; }
 
 /* ---------- Media Library ---------- */
 .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-top: 16px; }
