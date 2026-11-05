@@ -122,8 +122,20 @@ export function DataProvider({ children }) {
       const extras = cmsNorm.filter(r => !byKey.has(r.key));
       return [...base, ...extras].filter(r => r.visible !== false && !r.hidden);
     };
+    // Bỏ thẻ nhân vật trùng tên: bản CMS (đã đồng bộ) thắng bản legacy cùng tên,
+    // tránh trường hợp hai thẻ giống nhau cùng hiện trong bộ sưu tập.
+    const dedupeChars = list => {
+      const key = c => String(c.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim();
+      const byName = new Map();
+      for (const c of list) {
+        const k = key(c);
+        const prev = byName.get(k);
+        if (!prev || (prev.source !== 'cms' && c.source === 'cms')) byName.set(k, c);
+      }
+      return [...byName.values()];
+    };
     setEvents(merge(autoTimelineData, evFromLegacy, evFromCms, ev));
-    setCharacters(merge(characterData, chFromLegacy, chFromCms, ch));
+    setCharacters(dedupeChars(merge(characterData, chFromLegacy, chFromCms, ch)));
     setQuestions(merge(quizData, qFromLegacy, qFromCms, q));
     setMaps(mp.map(c => ({ key: c.legacy_id || `cms-${c.id}`, cmsId: c.id, title: c.title, body: c.body, imageUrl: c.image_url, ...c.payload, published: c.published })));
     setPages(pg);

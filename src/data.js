@@ -53,23 +53,6 @@ export const characterData = [
     "imageUrl": "/images/1783587059272_A_nh_ma_n_hi_nh_2026_07_09_lu_c_15.50.06.png"
   },
   {
-    "id": 4,
-    "name": "Võ Nguyên Giáp",
-    "title": "Thiên tài Quân sự",
-    "motivation": "Giải phóng dân tộc, đánh bại các đế quốc sừng sỏ.",
-    "quote": "Thần tốc, thần tốc hơn nữa. Táo bạo, táo bạo hơn nữa.",
-    "modernLink": "Tư duy Chiến lược, linh hoạt & Quản trị rủi ro.",
-    "wikiId": "char_vo_nguyen_giap",
-    "stats": {
-      "int": 98,
-      "ldr": 95,
-      "vis": 99
-    },
-    "color": "bg-red-500",
-    "category": "vietnam",
-    "imageUrl": "/images/1783579790205_grok_image_fbb42ce3_80fe_485e_a892_f0cc39430c4f.jpg"
-  },
-  {
     "id": 5,
     "name": "Napoleon Bonaparte",
     "title": "Hoàng đế kiệt xuất",
@@ -85,22 +68,5 @@ export const characterData = [
     "color": "bg-yellow-500",
     "category": "world",
     "imageUrl": ""
-  },
-  {
-    "id": 6,
-    "name": "Nhân vật mới",
-    "title": "Chức danh",
-    "motivation": "Lý tưởng của nhân vật",
-    "quote": "Câu nói nổi tiếng",
-    "modernLink": "Liên hệ Gen Z",
-    "wikiId": "",
-    "stats": {
-      "int": 50,
-      "ldr": 50,
-      "vis": 50
-    },
-    "color": "bg-gray-500",
-    "category": "vietnam",
-    "imageUrl": "/images/1783579798799_ChatGPT_Image_11_05_23_25_thg_6__2026.png"
   }
 ];

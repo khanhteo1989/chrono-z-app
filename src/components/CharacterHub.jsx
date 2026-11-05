@@ -8,7 +8,7 @@ import { wikiData } from '../wikiData';
 
 // ============ THẺ NHÂN VẬT + THỬ THÁCH MỞ KHÓA (server-side) ============
 export default function CharacterHub({ go, focus }) {
-  const { characters, eventByKey, unlocks, points, refresh } = useData();
+  const { characters, unlocks, points, refresh } = useData();
   const { user } = useAuth();
   const [region, setRegion] = useState('vietnam');
   const [q, setQ] = useState('');
@@ -36,6 +36,29 @@ export default function CharacterHub({ go, focus }) {
         </div>
       </header>
 
+      <details className="card-guide">
+        <summary><BookOpen size={15} /> Cách sử dụng thẻ nhân vật</summary>
+        <ol className="guide-list">
+          <li><span>1</span>Các thẻ đang ở dạng khoá — để sở hữu thẻ, bạn cần mở khoá.</li>
+          <li><span>2</span>Bấm vào thẻ muốn mở khoá, chọn tab “Thử thách mở khóa”.</li>
+          <li><span>3</span>Mỗi cấp độ có số câu và thời gian riêng (Basic 7 câu · Rare 9 câu · Epic 11 câu/15 phút · Legend 12 câu/15 phút).</li>
+          <li><span>4</span>Trả lời đúng toàn bộ câu hỏi để nhận thẻ và điểm thưởng.</li>
+        </ol>
+        <table className="mini-table">
+          <thead><tr><th>Cấp độ</th><th>Số câu</th><th>Thời gian</th><th>Điểm</th></tr></thead>
+          <tbody>
+            {Object.entries(RARITY).map(([k, r]) => (
+              <tr key={k}>
+                <td style={{ color: r.ring, fontWeight: 700 }}>{r.label}</td>
+                <td>{r.count} câu</td>
+                <td>{r.minutes ? `${r.minutes} phút` : 'Không giới hạn'}</td>
+                <td>+{r.points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+
       <div className="filter-bar">
         <div className="search-box"><BookOpen size={16} /><input placeholder="Tìm nhân vật…" value={q} onChange={e => setQ(e.target.value)} /></div>
         <div className="chip-row">{['all', ...Object.keys(RARITY)].map(r => <button key={r} className={rarityF === r ? 'chip on' : 'chip'} onClick={() => setRarityF(r)}>{r === 'all' ? 'Mọi cấp' : RARITY[r].label}</button>)}</div>
@@ -47,7 +70,7 @@ export default function CharacterHub({ go, focus }) {
       </div>
 
       {openChar && byKey(openChar) && (
-        <CharModal char={byKey(openChar)} eventByKey={eventByKey}
+        <CharModal char={byKey(openChar)}
           unlocked={user && unlocks.some(u => u.character_id === (byKey(openChar).cmsId || byKey(openChar).id))}
           user={user} onClose={() => setOpenChar(null)} go={go} refresh={refresh} />
       )}
@@ -69,14 +92,13 @@ function CharCard({ char, unlocked, onOpen }) {
   );
 }
 
-function CharModal({ char, eventByKey, unlocked, user, onClose, go, refresh }) {
+function CharModal({ char, unlocked, user, onClose, go, refresh }) {
   const [tab, setTab] = useState('biography');
   const [challenge, setChallenge] = useState(null); // {examId, questions, answers, submitted, result, deadline}
   const r = RARITY[char.rarity] || RARITY.basic;
   const needCount = char.unlockCount ?? r.count;
   const needMin = char.unlockMinutes ?? r.minutes;
   const deep = char.wikiId ? wikiData[char.wikiId] : null;
-  const wikiTitle = char.wikiTitle || deep?.title || char.name;
   const wikiContent = char.wikiContent || deep?.content || '';
 
   async function beginChallenge() {
@@ -121,7 +143,7 @@ function CharModal({ char, eventByKey, unlocked, user, onClose, go, refresh }) {
         </div>
 
         <div className="tabbar">
-          {[['biography', 'Tiểu sử'], ['wiki', 'Mặt sau SGK'], ['events', 'Sự kiện liên quan'], ['challenge', 'Thử thách mở khóa']].map(([k, l]) =>
+          {[['biography', 'Tiểu sử'], ['challenge', 'Thử thách mở khóa']].map(([k, l]) =>
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}
         </div>
 
@@ -134,14 +156,6 @@ function CharModal({ char, eventByKey, unlocked, user, onClose, go, refresh }) {
             {char.ref && <p className="source">Nguồn: {char.ref}. {char.imageUrl ? 'Hình chân dung là tranh minh họa/phục dựng, không phải ảnh tư liệu gốc.' : ''}</p>}
           </div>
         )}
-        {tab === 'wiki' && <div className="tab-body"><h4>{wikiTitle}</h4><p className="pre-wrap">{wikiContent}</p></div>}
-        {tab === 'events' && <div className="tab-body">
-          {(char.relatedEvents || []).length === 0 && <p className="muted">Chưa có sự kiện liên kết. Admin gán trong Character Studio.</p>}
-          {(char.relatedEvents || []).map((k, i) => {
-            const ev = typeof k === 'string' ? eventByKey(k) : null;
-            return ev ? <button key={i} className="link-chip wide" onClick={() => go('timeline', { focus: ev.key })}>📜 {ev.title}</button> : <span key={i} className="muted small">Liên kết: {k}</span>;
-          })}
-        </div>}
         {tab === 'challenge' && <div className="tab-body">
           {!unlocked ? (
             <>

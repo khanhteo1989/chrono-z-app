@@ -4,6 +4,7 @@ import { getItem, upsertItem, removeItem } from '../cms';
 import { useData } from '../store';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
+import { RARITY } from '../utils';
 
 // ============ TRANG CHỦ HISTORLOG-Z ============
 // Khối nội dung đọc từ CMS (kind=pages, payload.section), fallback giá trị mặc định.
@@ -20,7 +21,7 @@ const DEFAULT_BLOCKS = {
 };
 
 export default function Home({ go }) {
-  const { pages, events, announcements, refresh } = useData();
+  const { pages, events, characters, announcements, refresh } = useData();
   const { user, isAdmin } = useAuth();
   const [block, setBlock] = useState(DEFAULT_BLOCKS);
   const [fb, setFb] = useState({ name: '', message: '' });
@@ -117,29 +118,24 @@ export default function Home({ go }) {
         </div>
       )}
 
-      <section className="hero-showcase">
-        <div className="hero-brand-card">
-          <div className="hero-artwork-wrap">
-            <img
-              src={(block.hero.image && block.hero.image.trim()) || '/images/home-hero.jpg'}
-              alt="HISTORLOG-Z - History and Technology"
-              className="hero-artwork-img"
-            />
-          </div>
-          <div className="hero-card-content">
-            <p className="hero-card-desc">
-              {block.hero.desc || 'Nền tảng học Lịch sử tương tác: Dòng thời gian, Bản đồ, Thẻ nhân vật và Chrono-Quiz — dành cho học sinh THPT.'}
-            </p>
-            <div className="hero-card-cta">
-              <button className="btn-primary" onClick={() => go('timeline')}>
-                Bắt đầu khám phá <ChevronRight size={16} />
+      {/* Hero: bố cục cũ, nội dung canh giữa màn hình theo yêu cầu trong file thay đổi */}
+      <section className="hero-band" style={{ backgroundImage: `linear-gradient(rgba(23,19,23,.62),rgba(23,19,23,.85)), url(${(block.hero.image && block.hero.image.trim()) || '/images/home-hero.jpg'})` }}>
+        <div className="hero-parallelogram">
+          <img src="/images/avatar.png" alt="HISTORLOG-Z logo" className="hero-logo" />
+          <h1 className="museum-h1">{block.hero.title}</h1>
+          <p className="hero-slogan">{block.hero.subtitle}</p>
+          <p className="hero-desc">
+            {block.hero.desc || 'Nền tảng học Lịch sử tương tác: Dòng thời gian, Bản đồ, Thẻ nhân vật và Chrono-Quiz — dành cho học sinh THPT.'}
+          </p>
+          <div className="hero-cta">
+            <button className="btn-primary" onClick={() => go('timeline')}>
+              Bắt đầu khám phá <ChevronRight size={16} />
+            </button>
+            {!user && (
+              <button className="btn-ghost" onClick={() => go('account')}>
+                Đăng nhập để lưu tiến độ
               </button>
-              {!user && (
-                <button className="btn-ghost hero-login-btn" onClick={() => go('account')}>
-                  Đăng nhập để lưu tiến độ
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -225,6 +221,35 @@ export default function Home({ go }) {
           ))}
         </div>
       </section>
+
+      {/* Nhân vật lịch sử ở trang chính — cùng dạng thẻ ghim với sự kiện nổi bật */}
+      {characters.length > 0 && (
+        <section className="home-block">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '1rem' }}>
+            <div>
+              <h2 className="museum-h2" style={{ margin: 0 }}>Nhân vật lịch sử</h2>
+              <small className="muted">Bấm vào một nhân vật để xem tiểu sử và thử thách mở khoá thẻ.</small>
+            </div>
+            <button className="btn-ghost small" onClick={() => go('characters')}>
+              Xem bộ sưu tập thẻ <ChevronRight size={14} />
+            </button>
+          </div>
+          <div className="home-char-grid">
+            {characters.slice(0, 6).map(ch => (
+              <button key={ch.key} className="home-char-card" onClick={() => go('characters', { focus: ch.key })}>
+                <div className="hcc-img">
+                  {ch.imageUrl ? <img src={ch.imageUrl} alt={ch.name} /> : <span className="cc-ph">Chưa có chân dung</span>}
+                  <span className="hcc-rarity">{(RARITY[ch.rarity] || RARITY.basic).label}</span>
+                </div>
+                <div className="hcc-body">
+                  <b>{ch.name}</b>
+                  <small>{ch.role}{ch.era ? ` · ${ch.era}` : ''}</small>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="home-block">
         <h2 className="museum-h2">Góp ý cho dự án</h2>
