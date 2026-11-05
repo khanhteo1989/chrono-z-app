@@ -464,7 +464,7 @@ a { color: var(--burgundy); cursor: pointer; }
 /* Ô mô tả ghim cho phép xuống dòng: textarea tự giãn theo nội dung */
 .pin-row textarea.pin-desc { min-height: 38px; max-height: 160px; line-height: 1.45; resize: vertical; overflow-y: auto; }
 /* Giữ nguyên xuống dòng khi hiển thị mô tả ghim cho học sinh */
-.hover-pin-body p, .pin-panel p { white-space: pre-line; }
+.hover-pin-body p, .hover-pin-body .hover-pin-event, .pin-panel p { white-space: pre-line; }
 
 /* ---------- Media Library ---------- */
 .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-top: 16px; }

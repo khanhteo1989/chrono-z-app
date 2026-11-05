@@ -906,13 +906,19 @@ function MapEditor({ row, setRow, onClose, onSave }) {
                 </div>
               </div>
 
-              {/* Ô 3: Tự viết tự do (không chọn dropdown mặc định) */}
-              <input
-                className="field"
+              {/* Ô 3: Tự viết tự do (không chọn dropdown mặc định) — cho phép xuống dòng */}
+              <textarea
+                className="field pin-desc"
+                rows={1}
                 style={{ width: '180px', minWidth: '140px' }}
                 value={m.event_name || m.event_key || ''}
                 placeholder="Tên sự kiện tự nhập..."
-                onChange={e => patch(i, { event_name: e.target.value, event_key: e.target.value })}
+                onChange={e => {
+                  patch(i, { event_name: e.target.value, event_key: e.target.value });
+                  const t = e.currentTarget;
+                  t.style.height = 'auto';
+                  t.style.height = `${t.scrollHeight}px`;
+                }}
               />
 
               <button title="Xóa ghim" onClick={() => setP({ markers: markers.filter((_, j) => j !== i) })}><Trash2 size={14} /></button>
