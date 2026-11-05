@@ -115,6 +115,13 @@ export function DataProvider({ children }) {
       listItems('pages').catch(e => (results.pages = e.message, [])),
       listItems('announcements').catch(e => (results.announcements = e.message, [])),
     ]);
+    // Sự kiện rỗng (không tiêu đề, tiêu đề nháp hoặc không có nội dung) bị loại
+    // để dữ liệu nháp trong CMS/legacy không hiện ra Dòng thời gian.
+    const hasContent = e => {
+      const title = String(e.title || '').trim();
+      if (!title || /chưa có tiêu đề/i.test(title)) return false;
+      return Boolean((e.basic || '').trim() || (e.advanced || '').trim() || (e.fullWiki || '').trim());
+    };
     const merge = (legacyList, fromLegacy, fromCms, cmsList) => {
       const cmsNorm = cmsList.map(fromCms);
       const byKey = new Map(cmsNorm.filter(r => r.key.startsWith('ev-') || r.key.startsWith('ch-') || r.key.startsWith('q-')).map(r => [r.key, r]));
@@ -134,7 +141,7 @@ export function DataProvider({ children }) {
       }
       return [...byName.values()];
     };
-    setEvents(merge(autoTimelineData, evFromLegacy, evFromCms, ev));
+    setEvents(merge(autoTimelineData, evFromLegacy, evFromCms, ev).filter(hasContent));
     setCharacters(dedupeChars(merge(characterData, chFromLegacy, chFromCms, ch)));
     setQuestions(merge(quizData, qFromLegacy, qFromCms, q));
     setMaps(mp.map(c => ({ key: c.legacy_id || `cms-${c.id}`, cmsId: c.id, title: c.title, body: c.body, imageUrl: c.image_url, ...c.payload, published: c.published })));

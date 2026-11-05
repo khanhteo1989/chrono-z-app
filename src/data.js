@@ -50,7 +50,7 @@ export const characterData = [
     },
     "color": "bg-green-500",
     "category": "vietnam",
-    "imageUrl": "/images/1783587059272_A_nh_ma_n_hi_nh_2026_07_09_lu_c_15.50.06.png"
+    "imageUrl": "/images/1783587059272_A_nh_ma_n_hi_nh_2026_07_09_lu_c_15.50.06.jpg"
   },
   {
     "id": 5,

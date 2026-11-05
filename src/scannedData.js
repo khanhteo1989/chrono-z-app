@@ -199,24 +199,4 @@ export const autoTimelineData = [
     "full_wiki": "Trật tự thế giới sau 1991:\n\nĐặc điểm của thế giới đương đại:\n• Xu thế hòa bình và hợp tác: Sau Chiến tranh lạnh, nguy cơ chiến tranh thế giới giảm đi đáng kể.\n• Cạnh tranh kinh tế thay thế chạy đua vũ trang: Các cường quốc cạnh tranh nhau bằng kinh tế, công nghệ hơn là quân sự.\n• Đa cực hóa: Mỹ, Trung Quốc, Nga, EU, Nhật Bản... cùng định hình trật tự thế giới.\n• Vai trò của Trung Quốc: Trỗi dậy mạnh mẽ, trở thành nền kinh tế lớn thứ 2 thế giới từ năm 2010.\n\nToàn cầu hóa:\n• Internet và công nghệ thông tin kết nối thế giới – \"Thế giới phẳng\" (Thomas Friedman).\n• Thương mại và đầu tư quốc tế bùng nổ. WTO (thành lập 1/1/1995) quản lý thương mại toàn cầu.\n• Dòng chảy tự do của vốn, hàng hóa, công nghệ và thông tin xuyên biên giới.\n• Mặt trái: Sự phụ thuộc lẫn nhau làm gia tăng tính dễ tổn thương (khủng hoảng tài chính 1997, 2008 lan nhanh toàn cầu).\n\nCác vấn đề toàn cầu nổi lên:\n• Khủng bố quốc tế: 11/9/2001 – Mỹ phát động \"Cuộc chiến chống khủng bố toàn cầu\".\n• Biến đổi khí hậu: Hiệp định Paris về khí hậu (2015).\n• Dịch bệnh xuyên biên giới (COVID-19 từ 2019).\n• Bất bình đẳng giàu nghèo ngày càng gia tăng trong và giữa các quốc gia.\n\nXu thế khu vực hóa:\n• EU (Liên minh châu Âu, chính thức 1993): Thể hiện rõ nhất xu thế liên kết khu vực sâu sắc.\n• APEC, ASEAN+3, SCO... phát triển mạnh.\n• Việt Nam và các nước đang phát triển: Cơ hội lớn từ hội nhập quốc tế, nhưng đòi hỏi phải không ngừng cải cách để cạnh tranh hiệu quả.",
     "wikiLinks": {}
   },
-  {
-    "id": 20,
-    "period": "NĂM ...",
-    "category": "vietnam",
-    "title": "Sự kiện mới chưa có tiêu đề",
-    "basic": "",
-    "advanced": "",
-    "full_wiki": "",
-    "wikiLinks": {}
-  },
-  {
-    "id": 21,
-    "period": "NĂM ...",
-    "category": "world",
-    "title": "Sự kiện mới chưa có tiêu đề",
-    "basic": "",
-    "advanced": "",
-    "full_wiki": "",
-    "wikiLinks": {}
-  }
 ];

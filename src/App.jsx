@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Clock, Map as MapIcon, Users, BrainCircuit, Info, UserCircle2, ShieldCheck, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { AuthProvider, useAuth } from './auth';
 import { DataProvider } from './store';
@@ -9,7 +9,11 @@ import CharacterHub from './components/CharacterHub';
 import QuizArena from './components/QuizArena';
 import About from './components/About';
 import Account from './components/Account';
-import AdminCMS from './components/AdminCMS';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Bảng quản trị rất nặng (nhiều màn hình) → tách khỏi bundle chính,
+// chỉ tải khi admin thực sự mở tab Quản trị.
+const AdminCMS = lazy(() => import('./components/AdminCMS'));
 
 const NAV = [
   ['home', 'Trang chủ', Clock],
@@ -23,11 +27,13 @@ const NAV = [
 
 export default function App() {
   return (
-    <AuthProvider>
-      <DataProvider>
-        <Shell />
-      </DataProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <DataProvider>
+          <Shell />
+        </DataProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
@@ -83,7 +89,11 @@ function Shell() {
         {tab === 'quiz' && <QuizArena go={go} focus={opts} />}
         {tab === 'about' && <About go={go} />}
         {tab === 'account' && <Account go={go} />}
-        {tab === 'admin' && <AdminCMS go={go} opts={opts} />}
+        {tab === 'admin' && (
+          <Suspense fallback={<div className="page"><div className="page-panel"><p className="muted">Đang tải bảng quản trị…</p></div></div>}>
+            <AdminCMS go={go} opts={opts} />
+          </Suspense>
+        )}
       </main>
     </div>
   );
