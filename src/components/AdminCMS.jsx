@@ -734,6 +734,11 @@ function MapStudio({ done }) {
       await done(); load(); setEdit(r);
     } catch (e) { setBusy('Lỗi tạo bản đồ: ' + e.message); }
   }
+  async function removeMap(r) {
+    if (!window.confirm(`Xoá hẳn bản đồ “${r.title}”? Thao tác này không hoàn tác được.`)) return;
+    try { await removeItem(r.id); await done(); load(); setBusy(`Đã xoá bản đồ “${r.title}”.`); }
+    catch (e) { setBusy('Lỗi xoá: ' + e.message); }
+  }
   async function seedLegacy(m) {
     try {
       await upsertItem({ kind: 'maps', legacy_id: m.key, title: m.title, body: m.description, published: true, visible: true, payload: { year: m.year, markers: m.markers } });
@@ -754,15 +759,23 @@ function MapStudio({ done }) {
         ))}
       </div>
       <table className="admin-table">
-        <thead><tr><th>Bản đồ</th><th>Số ghim</th><th>Trạng thái</th><th></th></tr></thead>
-        <tbody>{rows.map(r => (
-          <tr key={r.id}>
-            <td><b>{r.title}</b> <small>{r.payload?.year || ''}</small></td>
-            <td>{(r.payload?.markers || []).length}</td>
-            <td>{r.published ? <span className="pill ok">Đã xuất bản</span> : <span className="pill">Bản nháp</span>}</td>
-            <td><button onClick={() => setEdit(JSON.parse(JSON.stringify(r)))}>Mở Map Studio</button></td>
-          </tr>
-        ))}</tbody>
+        <thead><tr><th>Bản đồ</th><th>Số ghim</th><th>Trạng thái</th><th>Ghi chú</th><th></th></tr></thead>
+        <tbody>{rows.map(r => {
+          const t = (r.title || '').trim().toLowerCase();
+          const same = rows.filter(x => (x.title || '').trim().toLowerCase() === t).length;
+          return (
+            <tr key={r.id}>
+              <td><b>{r.title}</b> <small>{r.payload?.year || ''}</small></td>
+              <td>{(r.payload?.markers || []).length}</td>
+              <td>{r.published ? <span className="pill ok">Đã xuất bản</span> : <span className="pill">Bản nháp</span>}</td>
+              <td>{same > 1 && <span className="pill" title="Cùng tên với bản đồ khác — nên xoá bớt bản nháp trùng">Trùng tên ×{same}</span>}</td>
+              <td className="row-gap">
+                <button onClick={() => setEdit(JSON.parse(JSON.stringify(r)))}>Mở Map Studio</button>
+                <button className="btn-ghost" onClick={() => removeMap(r)} title="Xoá bản đồ này"><Trash2 size={14} /> Xoá</button>
+              </td>
+            </tr>
+          );
+        })}</tbody>
       </table>
       {edit && <MapEditor row={edit} setRow={setEdit} onClose={() => setEdit(null)} onSave={async (r) => {
         try { await upsertItem(r); await done(); load(); setEdit(null); setBusy('✔ Đã lưu bản đồ “' + r.title + '”.'); }

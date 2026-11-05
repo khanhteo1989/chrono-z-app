@@ -30,7 +30,17 @@ export default function MapExplorer({ go, focus }) {
     const byKey = new Map(cmsNorm.map(m => [m.key, m]));
     const base = LEGACY_MAPS.map(l => byKey.get(l.key) || l);
     const extras = cmsNorm.filter(m => !LEGACY_MAPS.some(l => l.key === m.key));
-    return [...base, ...extras].filter(m => m.published !== false);
+    // CMS có thể còn nhiều bản nháp/bản xuất bản trùng tên nhau:
+    // chỉ hiển thị một bản cho mỗi tên, ưu tiên bản đầy đủ nội dung hơn.
+    const score = m => (m.markers?.length || 0) * 10 + (m.imageUrl ? 5 : 0) + (m.description ? 1 : 0);
+    const picked = new Map();
+    for (const m of [...base, ...extras]) {
+      if (m.published === false) continue;
+      const t = (m.title || '').trim().toLowerCase();
+      const prev = picked.get(t);
+      if (!prev || score(m) > score(prev)) picked.set(t, m);
+    }
+    return [...picked.values()];
   }, [cmsMaps]);
 
   const shown = maps.filter(m => searchIn(q, m.title, m.description, String(m.year || '')));
@@ -75,19 +85,51 @@ function MapStage({ map, go, eventByKey, onBack, isAdmin }) {
   const [pin, setPin] = useState(null);
   const [hoverPin, setHoverPin] = useState(null);
   const drag = useRef(null);
+  const pointers = useRef(new Map());
+  const pinch = useRef(null);
   const stageRef = useRef(null);
 
   const clamp = (z) => Math.min(4, Math.max(1, z));
+  const midOf = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const distOf = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
   function onPointerDown(e) {
     if (e.target.closest('.map-pin')) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* trình duyệt cũ / pointer không còn active */ }
+    // Hai ngón chạm → chuyển sang pinch-zoom (điện thoại/tablet)
+    if (pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()];
+      pinch.current = { dist: distOf(a, b) || 1, zoom, pan: { ...pan }, mid: midOf(a, b) };
+      drag.current = null;
+      return;
+    }
     drag.current = { sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y };
-    e.currentTarget.setPointerCapture?.(e.pointerId);
   }
   function onPointerMove(e) {
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch.current && pointers.current.size >= 2) {
+      const [a, b] = [...pointers.current.values()];
+      const z = clamp(pinch.current.zoom * (distOf(a, b) / pinch.current.dist));
+      const mid = midOf(a, b);
+      setZoom(z);
+      setPan(z === 1 ? { x: 0, y: 0 } : {
+        x: pinch.current.pan.x + (mid.x - pinch.current.mid.x),
+        y: pinch.current.pan.y + (mid.y - pinch.current.mid.y),
+      });
+      return;
+    }
     if (!drag.current) return;
     setPan({ x: drag.current.px + (e.clientX - drag.current.sx), y: drag.current.py + (e.clientY - drag.current.sy) });
   }
-  function onPointerUp() { drag.current = null; }
+  function onPointerUp(e) {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) pinch.current = null;
+    // Còn một ngón sau khi nhấc → kéo tiếp từ vị trí ngón đó, không bị giật
+    const rest = [...pointers.current.values()][0];
+    drag.current = rest ? { sx: rest.x, sy: rest.y, px: pan.x, py: pan.y } : null;
+  }
   function onWheel(e) {
     e.preventDefault();
     const z = clamp(zoom + (e.deltaY < 0 ? 0.25 : -0.25));
@@ -156,7 +198,7 @@ function MapStage({ map, go, eventByKey, onBack, isAdmin }) {
         </div>
         <span className="zoom-badge">{Math.round(zoom * 100)}%</span>
       </div>
-      <p className="muted small pad">Mẹo: kéo để di chuyển, cuộn chuột hoặc dùng nút để phóng to; bấm điểm ghim để xem chi tiết. Trên điện thoại: chạm kéo và pinch bằng hai ngón (một số trình duyệt hỗ trợ).</p>
+      <p className="muted small pad">Mẹo: kéo để di chuyển, cuộn chuột hoặc dùng nút để phóng to; bấm điểm ghim để xem chi tiết. Trên điện thoại: một ngón để kéo, chụm hai ngón để phóng to/thu nhỏ.</p>
 
       {pin && (
         <section className="pin-panel page-panel">

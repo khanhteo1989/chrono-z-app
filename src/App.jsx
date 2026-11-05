@@ -15,6 +15,24 @@ import ErrorBoundary from './components/ErrorBoundary';
 // chỉ tải khi admin thực sự mở tab Quản trị.
 const AdminCMS = lazy(() => import('./components/AdminCMS'));
 
+// Đường dẫn cho từng tab: cho phép F5 / chia sẻ link mở đúng màn hình.
+const PATH_BY_TAB = {
+  home: '/',
+  timeline: '/dong-thoi-gian',
+  maps: '/ban-do',
+  characters: '/nhan-vat',
+  quiz: '/chrono-quiz',
+  about: '/ve-du-an',
+  account: '/tai-khoan',
+  admin: '/admin',
+};
+const TAB_BY_PATH = Object.fromEntries(Object.entries(PATH_BY_TAB).map(([k, p]) => [p, k]));
+
+const normPath = (p) => p.replace(/\/+$/, '') || '/';
+function tabFromPath(pathname) {
+  return TAB_BY_PATH[normPath(pathname)] || null;
+}
+
 const NAV = [
   ['home', 'Trang chủ', Clock],
   ['timeline', 'Dòng thời gian', Clock],
@@ -39,15 +57,28 @@ export default function App() {
 
 function Shell() {
   const { user, isAdmin, signOut, loading } = useAuth();
-  const [tab, setTab] = useState('home');
-  const [opts, setOpts] = useState(null);
+  const [tab, setTab] = useState(() => tabFromPath(window.location.pathname) || 'home');
+  const [opts, setOpts] = useState(() => window.history.state?.opts ?? null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function go(next, o = null) { setTab(next); setOpts(o); setMenuOpen(false); window.scrollTo({ top: 0 }); }
+  // Mỗi tab có URL riêng (Vercel SPA rewrite → index.html, đọc location.pathname)
+  function go(next, o = null) {
+    setTab(next); setOpts(o); setMenuOpen(false); window.scrollTo({ top: 0 });
+    const path = PATH_BY_TAB[next];
+    if (path && normPath(window.location.pathname) !== normPath(path)) {
+      window.history.pushState({ tab: next, opts: o }, '', path);
+    }
+  }
 
-  // Deep-link /admin (Vercel SPA rewrite → index.html, đọc location.pathname)
+  // Nút Back/Forward của trình duyệt điều hướng giữa các tab
   useEffect(() => {
-    if (window.location.pathname.replace(/\/+$/, '') === '/admin') setTab('admin');
+    function onPop(e) {
+      setTab(tabFromPath(window.location.pathname) || 'home');
+      setOpts(e.state?.opts ?? null);
+      setMenuOpen(false);
+    }
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   // Tab "admin" chỉ hiện khi thực sự có quyền (role kiểm tra qua Supabase, không mật khẩu cứng)
